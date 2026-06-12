@@ -1,26 +1,77 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #060808;
+  --foreground: #f7f2e8;
+  --surface: #0d1110;
+  --surface-raised: #141a18;
+  --muted: #9da8a0;
+  --border: #24302c;
+  --primary: #22c55e;
+  --primary-foreground: #031008;
+  --accent: #d6a94f;
+  --accent-foreground: #120d03;
+  --info: #38bdf8;
+  --danger: #fb7185;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-background: #060808;
+  --color-foreground: #f7f2e8;
+  --color-surface: #0d1110;
+  --color-surface-raised: #141a18;
+  --color-muted: #9da8a0;
+  --color-border: #24302c;
+  --color-primary: #22c55e;
+  --color-primary-foreground: #031008;
+  --color-accent: #d6a94f;
+  --color-accent-foreground: #120d03;
+  --color-info: #38bdf8;
+  --color-danger: #fb7185;
+  --font-sans: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, monospace;
+  --shadow-premium: 0 24px 80px -40px rgba(34, 197, 94, 0.55);
+  --shadow-gold: 0 22px 72px -44px rgba(214, 169, 79, 0.7);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  min-height: 100vh;
+}
+
+* {
+  border-color: var(--border);
+}
+
+::selection {
+  background: rgba(214, 169, 79, 0.38);
+  color: #fff8e8;
+}
+
+a,
+button,
+input,
+textarea,
+select {
+  -webkit-tap-highlight-color: transparent;
+}
+
+input,
+textarea,
+select,
+button {
+  font: inherit;
+}
+
+.premium-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 42px 42px;
+}
+
+.text-balance {
+  text-wrap: balance;
 }

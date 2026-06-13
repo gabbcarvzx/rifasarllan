@@ -29,7 +29,22 @@ export type PaymentStatus =
   | "cancelled"
   | "refunded";
 
+export type MediaBucketName =
+  | "raffle-images"
+  | "prize-images"
+  | "platform-assets"
+  | "winners"
+  | "temporary";
+
 export type ISODateTime = string;
+
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[];
 
 export type Profile = {
   id: string;
@@ -90,6 +105,7 @@ export type Raffle = {
 export type RaffleImage = {
   id: string;
   raffle_id: string;
+  media_file_id: string | null;
   image_url: string;
   alt_text: string | null;
   order_index: number;
@@ -99,6 +115,7 @@ export type RaffleImage = {
 export type RafflePrize = {
   id: string;
   raffle_id: string;
+  media_file_id: string | null;
   title: string;
   description: string | null;
   image_url: string | null;
@@ -124,6 +141,18 @@ export type PublicRaffleNumber = Pick<
   RaffleNumber,
   "id" | "raffle_id" | "number" | "status"
 >;
+
+export type ReserveRaffleNumbersResult = {
+  order_id: string;
+  amount: number;
+  reserved_until: ISODateTime;
+  reserved_numbers: number[];
+};
+
+export type ExpireOldReservationsResult = {
+  expired_orders: number;
+  released_numbers: number;
+};
 
 export type Order = {
   id: string;
@@ -156,9 +185,28 @@ export type Payment = {
   provider_payment_id: string | null;
   pix_qr_code: string | null;
   pix_copy_paste: string | null;
+  provider_raw_status: string | null;
+  invoice_url: string | null;
+  expires_at: ISODateTime | null;
+  due_date: string | null;
+  pix_end_to_end_identifier: string | null;
+  last_provider_sync: ISODateTime | null;
+  provider_response: Json | null;
   amount: number | null;
   status: PaymentStatus;
   paid_at: ISODateTime | null;
+  created_at: ISODateTime;
+  updated_at: ISODateTime;
+};
+
+export type AsaasCustomer = {
+  id: string;
+  tenant_id: string;
+  user_id: string;
+  asaas_customer_id: string;
+  name: string;
+  email: string;
+  phone: string | null;
   created_at: ISODateTime;
   updated_at: ISODateTime;
 };
@@ -175,6 +223,24 @@ export type Winner = {
   winner_phone: string | null;
   drawn_at: ISODateTime;
   created_at: ISODateTime;
+};
+
+export type MediaFile = {
+  id: string;
+  tenant_id: string;
+  bucket_name: MediaBucketName;
+  file_name: string;
+  original_name: string | null;
+  mime_type: string;
+  file_size: number;
+  storage_path: string;
+  public_url: string | null;
+  width: number | null;
+  height: number | null;
+  uploaded_by: string | null;
+  is_active: boolean;
+  created_at: ISODateTime;
+  updated_at: ISODateTime;
 };
 
 export type Database = {
@@ -242,7 +308,9 @@ export type Database = {
       raffle_images: {
         Row: RaffleImage;
         Insert: Pick<RaffleImage, "raffle_id" | "image_url"> &
-          Partial<Pick<RaffleImage, "id" | "alt_text" | "order_index">>;
+          Partial<
+            Pick<RaffleImage, "id" | "media_file_id" | "alt_text" | "order_index">
+          >;
         Update: Partial<Omit<RaffleImage, "id" | "raffle_id" | "created_at">>;
         Relationships: [];
       };
@@ -250,7 +318,15 @@ export type Database = {
         Row: RafflePrize;
         Insert: Pick<RafflePrize, "raffle_id" | "title"> &
           Partial<
-            Pick<RafflePrize, "id" | "description" | "image_url" | "position" | "quantity">
+            Pick<
+              RafflePrize,
+              | "id"
+              | "media_file_id"
+              | "description"
+              | "image_url"
+              | "position"
+              | "quantity"
+            >
           >;
         Update: Partial<Omit<RafflePrize, "id" | "raffle_id" | "created_at" | "updated_at">>;
         Relationships: [];
@@ -303,12 +379,38 @@ export type Database = {
               | "provider_payment_id"
               | "pix_qr_code"
               | "pix_copy_paste"
+              | "provider_raw_status"
+              | "invoice_url"
+              | "expires_at"
+              | "due_date"
+              | "pix_end_to_end_identifier"
+              | "last_provider_sync"
+              | "provider_response"
               | "amount"
               | "status"
               | "paid_at"
             >
           >;
         Update: Partial<Omit<Payment, "id" | "order_id" | "created_at" | "updated_at">>;
+        Relationships: [];
+      };
+      asaas_customers: {
+        Row: AsaasCustomer;
+        Insert: Pick<
+          AsaasCustomer,
+          | "tenant_id"
+          | "user_id"
+          | "asaas_customer_id"
+          | "name"
+          | "email"
+        > &
+          Partial<Pick<AsaasCustomer, "id" | "phone">>;
+        Update: Partial<
+          Omit<
+            AsaasCustomer,
+            "id" | "tenant_id" | "user_id" | "created_at" | "updated_at"
+          >
+        >;
         Relationships: [];
       };
       winners: {
@@ -321,6 +423,34 @@ export type Database = {
             >
           >;
         Update: Partial<Omit<Winner, "id" | "tenant_id" | "created_at">>;
+        Relationships: [];
+      };
+      media_files: {
+        Row: MediaFile;
+        Insert: Pick<
+          MediaFile,
+          | "tenant_id"
+          | "bucket_name"
+          | "file_name"
+          | "mime_type"
+          | "file_size"
+          | "storage_path"
+        > &
+          Partial<
+            Pick<
+              MediaFile,
+              | "id"
+              | "original_name"
+              | "public_url"
+              | "width"
+              | "height"
+              | "uploaded_by"
+              | "is_active"
+            >
+          >;
+        Update: Partial<
+          Omit<MediaFile, "id" | "tenant_id" | "created_at" | "updated_at">
+        >;
         Relationships: [];
       };
     };
@@ -346,6 +476,44 @@ export type Database = {
       generate_raffle_numbers: {
         Args: { p_raffle_id: string };
         Returns: number;
+      };
+      reserve_raffle_numbers: {
+        Args: {
+          p_raffle_id: string;
+          p_numbers: number[];
+          p_customer_name: string;
+          p_customer_email: string;
+          p_customer_phone: string;
+        };
+        Returns: ReserveRaffleNumbersResult[];
+      };
+      expire_old_reservations: {
+        Args: Record<string, never>;
+        Returns: ExpireOldReservationsResult[];
+      };
+      get_admin_dashboard_stats: {
+        Args: { p_tenant_id: string };
+        Returns: Json;
+      };
+      sync_asaas_payment: {
+        Args: {
+          p_payment_id: string;
+          p_status: PaymentStatus;
+          p_provider_raw_status: string | null;
+          p_provider_payment_id: string | null;
+          p_pix_copy_paste: string | null;
+          p_pix_qr_code: string | null;
+          p_invoice_url: string | null;
+          p_expires_at: string | null;
+          p_due_date: string | null;
+          p_pix_end_to_end_identifier: string | null;
+          p_provider_response: Json | null;
+        };
+        Returns: undefined;
+      };
+      storage_object_tenant_id: {
+        Args: { p_name: string };
+        Returns: string | null;
       };
     };
     Enums: Record<string, never>;

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Plus } from "lucide-react";
-import { getAdminRaffles } from "@/app/actions/raffles";
+import { getAdminRaffleAnalytics } from "@/app/actions/dashboard";
 import { AdminRafflesTable } from "@/components/admin/raffles/admin-raffles-table";
 import { PageHeader } from "@/components/admin/page-header";
 import { AuthMessage } from "@/components/auth/auth-message";
@@ -25,7 +25,7 @@ export default async function AdminRifasPage({
 }: AdminRifasPageProps) {
   const [{ error, success }, result] = await Promise.all([
     searchParams,
-    getAdminRaffles(),
+    getAdminRaffleAnalytics(),
   ]);
 
   return (
@@ -33,7 +33,7 @@ export default async function AdminRifasPage({
       <PageHeader
         eyebrow="Gestao de campanhas"
         title="Rifas"
-        description="CRUD real conectado ao Supabase, com isolamento por tenant, status operacional e geracao automatica de numeros."
+        description="Compare ocupacao, numeros reservados, confirmados e potencial de cada campanha do tenant."
         actions={
           <Link href="/admin/rifas/nova" className={buttonVariants()}>
             <Plus className="size-4" />

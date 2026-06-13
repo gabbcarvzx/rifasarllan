@@ -9,6 +9,7 @@ import {
   Sparkles,
   TicketCheck,
 } from "lucide-react";
+import { getPublicPrizeSummaries } from "@/app/actions/prizes";
 import { PublicRaffleCard } from "@/components/raffles/public-raffle-card";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
@@ -45,6 +46,9 @@ const steps = [
 
 export default async function HomePage() {
   const raffles = await getPublicActiveRaffles({ limit: 3 });
+  const prizeSummaries = await getPublicPrizeSummaries(
+    raffles.map((raffle) => raffle.id),
+  );
 
   return (
     <>
@@ -134,7 +138,11 @@ export default async function HomePage() {
           {raffles.length > 0 ? (
             <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
               {raffles.map((raffle) => (
-                <PublicRaffleCard key={raffle.id} raffle={raffle} />
+                <PublicRaffleCard
+                  key={raffle.id}
+                  raffle={raffle}
+                  prizeSummary={prizeSummaries[raffle.id]}
+                />
               ))}
             </div>
           ) : (

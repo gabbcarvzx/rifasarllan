@@ -19,9 +19,9 @@ export function StatCard({
   return (
     <Card className="p-5">
       <div className="flex items-start justify-between gap-4">
-        <div>
+        <div className="min-w-0">
           <p className="text-sm font-medium text-muted">{label}</p>
-          <p className="mt-2 text-2xl font-bold tracking-tight text-foreground">
+          <p className="mt-2 break-words font-mono text-xl font-bold text-foreground sm:text-2xl">
             {value}
           </p>
         </div>

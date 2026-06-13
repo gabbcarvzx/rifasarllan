@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { CalendarDays, Hash, Loader2, Save, Sparkles, Ticket } from "lucide-react";
+import { RaffleCreateMediaFields } from "@/components/admin/raffles/raffle-create-media-fields";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Card,
@@ -308,15 +309,17 @@ export function RaffleForm({ action, cancelHref, mode, raffle }: RaffleFormProps
           </CardContent>
         </Card>
 
+        {mode === "create" ? <RaffleCreateMediaFields /> : null}
+
         <Card className="p-5">
           <Ticket className="size-5 text-primary" />
           <h2 className="mt-4 text-xl font-bold text-foreground">
             Escopo desta etapa
           </h2>
           <p className="mt-2 text-sm leading-6 text-muted">
-            Ao criar a rifa, os numeros sao gerados no banco. Upload de imagens,
-            premios, reservas, pagamento Pix e sorteio permanecem para as proximas
-            etapas.
+            Ao criar a rifa, os numeros e as imagens selecionadas sao processados
+            no banco. Premios, reservas, pagamento Pix e sorteio permanecem para
+            as proximas etapas.
           </p>
         </Card>
 

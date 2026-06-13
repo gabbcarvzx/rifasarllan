@@ -53,69 +53,124 @@ Status: concluida.
 - Dashboard admin com metricas reais basicas de rifas.
 - Documentacao criada em `docs/RAFFLE_CRUD.md`.
 
-## Etapa 5: Upload de imagens e galeria
+## Etapa 5A: Media Management Foundation
 
-Status: pendente.
+Status: concluida.
 
-- Supabase Storage.
-- Buckets por dominio de uso.
-- Organizacao por tenant.
-- Validacao de tamanho e tipo de arquivo.
-- Galeria por rifa.
+- Buckets Supabase Storage definidos por dominio de uso.
+- Tabela `media_files` para metadados centralizados.
+- RLS para metadata e objetos do Storage.
+- Path padrao `tenants/{tenant_id}/...`.
+- Configuracoes centralizadas em `src/config/storage.ts`.
+- Validacoes reutilizaveis de MIME, assinatura real e tamanho.
+- Helpers base em `src/lib/storage`.
+- Componentes base de midia sem conexao com paginas.
+- Documentacao criada em `docs/MEDIA_ARCHITECTURE.md`.
 
-## Etapa 6: Cadastro de premios
+## Etapa 5B: Upload visual de imagens das rifas
 
-Status: pendente.
+Status: concluida.
 
-- Premio principal e premios secundarios.
-- Ordem de exibicao.
-- Regras de entrega.
-- Vinculo com rifa e tenant.
+- Conectar `UploadDropzone` ao formulario de rifas.
+- Upload de imagem principal.
+- Galeria de imagens por rifa.
+- Substituicao e desativacao de imagens antigas.
+- Integracao com `raffles.main_image_url`.
+- Server Actions protegidas por tenant e ownership da rifa.
+- Reordenacao visual da galeria.
+- Pagina publica com imagem principal e miniaturas clicaveis.
+- Documentacao criada em `docs/RAFFLE_MEDIA.md`.
 
-## Etapa 7: Grade de numeros
+## Etapa 6: Sistema completo de premios
 
-Status: pendente.
+Status: concluida.
 
-- Geracao de numeros por rifa.
-- Estados: disponivel, reservado, pago e cancelado.
-- Indices para consulta rapida por tenant e rifa.
-- UI responsiva para milhares de numeros.
+- CRUD real de premios em `raffle_prizes`.
+- Upload de imagens no bucket `prize-images`.
+- Vinculo auditavel com `media_files`.
+- Validacao de tenant e ownership por Server Actions.
+- Ordenacao visual por `position`.
+- Quantidade por premio.
+- Exibicao publica na pagina da rifa.
+- Resumo discreto de premios nos cards publicos.
+- Documentacao criada em `docs/PRIZES_SYSTEM.md`.
+
+## Etapa 7: Grade Visual de Numeros
+
+Status: concluida.
+
+- Consulta publica segura via `public_raffle_numbers`.
+- Exibicao dos status: disponivel, reservado, pago e cancelado.
+- Selecao multipla local, sem reserva real.
+- Busca por numero.
+- Filtro por status.
+- Filtro por intervalo.
+- Paginacao local para evitar renderizar milhares de botoes de uma vez.
+- Resumo de selecao com quantidade e total estimado.
+- CTA informativo/desabilitado para reserva futura.
+- Preview estatistico no admin.
+- Documentacao criada em `docs/NUMBER_GRID.md`.
 
 ## Etapa 8: Reserva de numeros
 
+Status: concluida.
+
+- Reserva transacional via `reserve_raffle_numbers`.
+- Bloqueio de numeros com `FOR UPDATE`.
+- Criacao de pedido `pending`.
+- Criacao de `order_items`.
+- Vinculo de `user_id`, `order_id` e `reserved_until`.
+- Expiracao com `expire_old_reservations`.
+- Pagina `/pedido/[id]`.
+- Contador regressivo da reserva.
+- Protecao para usuario nao acessar pedido de outro usuario.
+- Documentacao criada em `docs/RESERVATIONS.md`.
+
+## Etapa 9: Checkout Pix
+
+Status: implementacao tecnica concluida, ativacao operacional pausada.
+
+- Asaas como gateway oficial.
+- Configuracao production/sandbox por variaveis de ambiente.
+- Clientes Asaas persistidos e reutilizados.
+- Criacao idempotente de cobrancas Pix.
+- QR Code e Pix copia e cola.
+- Persistencia de status e resposta do provedor.
+- Refresh manual de status.
+- Cancelamento de cobranca pendente.
+- Pagina de pedido com checkout fintech.
+- Ativacao comercial condicionada a conta Asaas, webhook e reconciliacao futura.
+- Documentacao criada em `docs/ASAAS_CHECKOUT.md`.
+
+## Etapa 10: Dashboard administrativo profissional
+
+Status: concluida.
+
+- RPC multi-tenant `get_admin_dashboard_stats`.
+- Resumo real de rifas, numeros, pedidos e participantes.
+- Potencial total, valor reservado e valor confirmado.
+- Ocupacao por rifa com indicadores CSS.
+- Agenda de proximos sorteios.
+- Ultimos pedidos e ranking de ocupacao.
+- Alertas de premio, imagem, data, ocupacao e expiracao.
+- Listagem administrativa de rifas enriquecida com analytics.
+- Documentacao criada em `docs/ADMIN_DASHBOARD.md`.
+
+## Pagamento e webhook
+
+Status: pausados temporariamente.
+
+- Checkout Asaas nao deve ser ativado enquanto a conta do cliente nao estiver pronta.
+- Webhook, conciliacao e confirmacao automatica permanecem fora do escopo atual.
+
+## Etapa 11: Area do participante
+
 Status: pendente.
 
-- Reserva transacional.
-- Expiracao automatica.
-- Prevencao de dupla reserva.
-- Logs de tentativa e auditoria.
-
-## Etapa 9: Integracao Pix
-
-Status: pendente.
-
-- Provedor de pagamento definido.
-- Criacao de cobrancas Pix.
-- QR Code e copia e cola.
-- Status inicial de pagamento.
-
-## Etapa 10: Webhook de pagamento
-
-Status: pendente.
-
-- Endpoint server-side seguro.
-- Validacao de assinatura.
-- Idempotencia.
-- Atualizacao atomica de reservas e numeros.
-
-## Etapa 11: Sorteio e vencedores
-
-Status: pendente.
-
-- Regras de elegibilidade.
-- Registro de vencedor.
-- Auditoria do sorteio.
-- Pagina publica de resultado.
+- Minhas reservas.
+- Meus pedidos.
+- Historico de participacao.
+- Status de pagamento e numeros.
 
 ## Etapa 12: Dashboard financeiro
 
@@ -126,7 +181,16 @@ Status: pendente.
 - Filtros por periodo.
 - Exportacao futura.
 
-## Etapa 13: Polimento UX, seguranca e deploy
+## Etapa 13: Sorteio
+
+Status: pendente.
+
+- Regras de elegibilidade.
+- Registro de vencedor.
+- Auditoria do sorteio.
+- Pagina publica de resultado.
+
+## Etapa 14: Polimento final
 
 Status: pendente.
 

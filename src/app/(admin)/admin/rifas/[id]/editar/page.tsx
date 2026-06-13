@@ -2,10 +2,16 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Eye } from "lucide-react";
+import { getAdminRaffleNumberStats } from "@/app/actions/raffle-numbers";
+import { getRafflePrizes } from "@/app/actions/prizes";
+import { getAdminRaffleImages } from "@/app/actions/raffle-media";
 import { getAdminRaffleById, updateRaffle } from "@/app/actions/raffles";
 import { PageHeader } from "@/components/admin/page-header";
+import { PrizeList } from "@/components/admin/prizes/prize-list";
+import { NumberStatsPreview } from "@/components/admin/raffles/number-stats-preview";
 import { RaffleActions } from "@/components/admin/raffles/raffle-actions";
 import { RaffleForm } from "@/components/admin/raffles/raffle-form";
+import { RaffleMediaManager } from "@/components/admin/raffles/raffle-media-manager";
 import { RaffleStatusBadge } from "@/components/admin/raffles/raffle-status-badge";
 import { AuthMessage } from "@/components/auth/auth-message";
 import { buttonVariants } from "@/components/ui/button";
@@ -36,6 +42,11 @@ export default async function EditarRifaPage({
   }
 
   const raffle = result.data;
+  const [galleryResult, prizeResult, numberStats] = await Promise.all([
+    getAdminRaffleImages(raffle.id),
+    getRafflePrizes(raffle.id),
+    getAdminRaffleNumberStats(raffle.id),
+  ]);
 
   return (
     <div className="space-y-8">
@@ -73,7 +84,19 @@ export default async function EditarRifaPage({
         <RaffleActions raffle={raffle} />
       </div>
 
-      <AuthMessage error={error || result.error} success={success} />
+      <AuthMessage
+        error={
+          error ||
+          result.error ||
+          galleryResult.error ||
+          prizeResult.error ||
+          numberStats.error
+        }
+        success={success}
+      />
+      <NumberStatsPreview stats={numberStats} />
+      <RaffleMediaManager raffle={raffle} galleryImages={galleryResult.data} />
+      <PrizeList raffle={raffle} prizes={prizeResult.data} />
       <RaffleForm
         action={updateRaffle}
         cancelHref="/admin/rifas"

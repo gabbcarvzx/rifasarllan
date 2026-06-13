@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { normalizeSlug } from "@/lib/slug";
+import { uploadRaffleImageFile } from "@/lib/storage/raffle-images";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { Raffle, RaffleStatus } from "@/types/database";
 
@@ -48,6 +49,22 @@ function getFormString(formData: FormData, key: string) {
 
 function getFormBoolean(formData: FormData, key: string) {
   return formData.get(key) === "on" || formData.get(key) === "true";
+}
+
+function getFormFile(formData: FormData, key: string) {
+  const value = formData.get(key);
+
+  if (!(value instanceof File) || value.size <= 0) {
+    return null;
+  }
+
+  return value;
+}
+
+function getFormFiles(formData: FormData, key: string) {
+  return formData
+    .getAll(key)
+    .filter((value): value is File => value instanceof File && value.size > 0);
 }
 
 function redirectWithMessage(
@@ -359,6 +376,100 @@ async function syncNumbersAfterRangeUpdate(
   await ensureNumbersForRaffle(raffle.id, errorPath, errorPath);
 }
 
+async function uploadInitialRaffleMedia({
+  formData,
+  raffle,
+  tenantId,
+  userId,
+}: {
+  formData: FormData;
+  raffle: Raffle;
+  tenantId: string;
+  userId: string;
+}) {
+  const mainImage = getFormFile(formData, "mainImage");
+  const galleryImages = getFormFiles(formData, "galleryImages");
+  const supabase = await createSupabaseServerClient();
+
+  if (galleryImages.length > 10) {
+    redirectWithMessage(
+      `/admin/rifas/${raffle.id}/editar`,
+      "error",
+      "A rifa foi criada, mas a galeria permite no maximo 10 imagens.",
+    );
+  }
+
+  if (mainImage) {
+    const upload = await uploadRaffleImageFile({
+      file: mainImage,
+      tenantId,
+      raffleId: raffle.id,
+      uploadedBy: userId,
+    });
+
+    if (!upload.ok) {
+      redirectWithMessage(
+        `/admin/rifas/${raffle.id}/editar`,
+        "error",
+        `A rifa foi criada, mas a imagem principal falhou: ${upload.error}`,
+      );
+    }
+
+    const { error } = await supabase
+      .from("raffles")
+      .update({ main_image_url: upload.mediaFile.public_url })
+      .eq("id", raffle.id)
+      .eq("tenant_id", tenantId);
+
+    if (error) {
+      redirectWithMessage(
+        `/admin/rifas/${raffle.id}/editar`,
+        "error",
+        "A imagem principal foi enviada, mas nao foi vinculada a rifa.",
+      );
+    }
+
+    raffle.main_image_url = upload.mediaFile.public_url;
+  }
+
+  let orderIndex = 0;
+
+  for (const file of galleryImages) {
+    const upload = await uploadRaffleImageFile({
+      file,
+      tenantId,
+      raffleId: raffle.id,
+      uploadedBy: userId,
+    });
+
+    if (!upload.ok) {
+      redirectWithMessage(
+        `/admin/rifas/${raffle.id}/editar`,
+        "error",
+        `A rifa foi criada, mas uma imagem da galeria falhou: ${upload.error}`,
+      );
+    }
+
+    const { error } = await supabase.from("raffle_images").insert({
+      raffle_id: raffle.id,
+      media_file_id: upload.mediaFile.id,
+      image_url: upload.mediaFile.public_url ?? "",
+      alt_text: raffle.title,
+      order_index: orderIndex,
+    });
+
+    if (error) {
+      redirectWithMessage(
+        `/admin/rifas/${raffle.id}/editar`,
+        "error",
+        "Uma imagem foi enviada, mas nao foi incluida na galeria.",
+      );
+    }
+
+    orderIndex += 1;
+  }
+}
+
 export async function createRaffle(formData: FormData) {
   const { user, tenantId } = await getAdminScope();
   const payload = validateRaffleForm(
@@ -392,11 +503,18 @@ export async function createRaffle(formData: FormData) {
     `/admin/rifas/${data.id}/editar`,
   );
 
+  await uploadInitialRaffleMedia({
+    formData,
+    raffle: data,
+    tenantId,
+    userId: user.id,
+  });
+
   revalidateRafflePaths(data.slug);
   redirectWithMessage(
-    "/admin/rifas",
+    `/admin/rifas/${data.id}/editar`,
     "success",
-    "Rifa criada com sucesso e numeros gerados no banco.",
+    "Rifa criada com sucesso. Numeros e imagens foram processados.",
   );
 }
 

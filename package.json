@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "check:env": "node scripts/check-env.mjs",
+    "audit:security": "node scripts/audit-security.mjs",
+    "analyze": "next experimental-analyze"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",

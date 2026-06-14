@@ -54,7 +54,6 @@ export function HeaderClient({
                 src={logoUrl}
                 alt={`Logo ${platformName}`}
                 fill
-                unoptimized
                 className="object-contain p-1"
                 sizes="40px"
               />

@@ -12,7 +12,7 @@ import {
   Trophy,
   UserCheck,
 } from "lucide-react";
-import { getPublicManualResults } from "@/app/actions/manual-results";
+import { getPublicManualResultsForRaffle } from "@/app/actions/manual-results";
 import { getPublicRaffleNumbers } from "@/app/actions/raffle-numbers";
 import { getPublicRafflePrizes } from "@/app/actions/prizes";
 import { getPublicRaffleImages } from "@/app/actions/raffle-media";
@@ -25,7 +25,10 @@ import { ShareRaffleButton } from "@/components/raffles/share-raffle-button";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { getAuthContext } from "@/lib/auth/session";
+import {
+  getAuthContext,
+  hasSupabaseSessionCookie,
+} from "@/lib/auth/session";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { getPublicPlatformSettings } from "@/lib/platform-settings/public";
 import { getPublicRaffleBySlug } from "@/lib/raffles/public-queries";
@@ -70,6 +73,12 @@ export default async function RifaDetalhePage({ params }: RifaPageProps) {
 
   if (!raffle) notFound();
 
+  const authContextPromise = hasSupabaseSessionCookie().then((hasSession) => {
+    return hasSession
+      ? getAuthContext()
+      : Promise.resolve({ user: null, profile: null });
+  });
+
   const [
     galleryImages,
     prizes,
@@ -81,9 +90,16 @@ export default async function RifaDetalhePage({ params }: RifaPageProps) {
     getPublicRaffleImages(raffle.id),
     getPublicRafflePrizes(raffle.id),
     getPublicRaffleNumbers(raffle.id),
-    getAuthContext(),
+    authContextPromise,
     getPublicPlatformSettings(),
-    getPublicManualResults(raffle.slug),
+    getPublicManualResultsForRaffle({
+      id: raffle.id,
+      title: raffle.title,
+      slug: raffle.slug,
+      main_image_url: raffle.main_image_url,
+      status: raffle.status,
+      draw_date: raffle.draw_date,
+    }),
   ]);
   const customerDefaults = {
     name:

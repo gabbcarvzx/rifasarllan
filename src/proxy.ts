@@ -1,7 +1,10 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { isSupabaseConfigured } from "@/lib/env";
-import type { Database, ProfileRole, TenantStatus } from "@/types/database";
+import {
+  getSupabasePublicEnv,
+  isSupabaseConfigured,
+} from "@/lib/env/public";
+import type { Database } from "@/types/database";
 
 function redirectTo(request: NextRequest, pathname: string, message?: string) {
   const url = request.nextUrl.clone();
@@ -49,9 +52,10 @@ export async function proxy(request: NextRequest) {
   }
 
   let response = NextResponse.next({ request });
+  const { supabaseAnonKey, supabaseUrl } = getSupabasePublicEnv();
   const supabase = createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseAnonKey,
     {
       cookies: {
         getAll() {
@@ -84,45 +88,8 @@ export async function proxy(request: NextRequest) {
     );
   }
 
-  if (!isAdminRoute) {
-    return response;
-  }
-
-  const { data: profileData } = await supabase
-    .from("profiles")
-    .select("role,tenant_id")
-    .eq("id", user.id)
-    .maybeSingle();
-  const profile = profileData as {
-    role: ProfileRole;
-    tenant_id: string | null;
-  } | null;
-
-  if (profile?.role !== "admin" || !profile.tenant_id) {
-    return redirectWithCookies(
-      request,
-      response,
-      "/acesso-negado",
-      "permissao-admin",
-    );
-  }
-
-  const { data: tenantData } = await supabase
-    .from("tenants")
-    .select("status")
-    .eq("id", profile.tenant_id)
-    .maybeSingle();
-  const tenant = tenantData as { status: TenantStatus } | null;
-
-  if (tenant?.status !== "active") {
-    return redirectWithCookies(
-      request,
-      response,
-      "/acesso-negado",
-      "tenant-inativo",
-    );
-  }
-
+  // Authorization by role and tenant remains enforced by Server Components,
+  // Server Actions and RLS. The proxy only refreshes and validates the session.
   return response;
 }
 

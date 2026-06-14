@@ -73,7 +73,6 @@ export function AdminSidebar({
                   src={logoUrl}
                   alt={`Logo ${platformName}`}
                   fill
-                  unoptimized
                   className="object-contain p-1"
                   sizes="36px"
                 />
@@ -121,7 +120,6 @@ export function AdminSidebar({
                 src={logoUrl}
                 alt={`Logo ${platformName}`}
                 fill
-                unoptimized
                 className="object-contain p-1"
                 sizes="44px"
               />

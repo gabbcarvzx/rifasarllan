@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { UserPlus } from "lucide-react";
-import { signUpWithEmail } from "@/app/actions/auth";
-import { AuthMessage } from "@/components/auth/auth-message";
-import { AuthSubmitButton } from "@/components/auth/auth-submit-button";
+import { SignupForm } from "@/components/auth/signup-form";
 import {
   Card,
   CardContent,
@@ -11,7 +9,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 
 export const metadata: Metadata = {
   title: "Cadastro",
@@ -54,63 +51,7 @@ export default async function CadastroPage({ searchParams }: CadastroPageProps) 
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
-            <AuthMessage error={params.error} success={params.success} />
-            <form action={signUpWithEmail} className="space-y-4">
-              <label className="grid gap-2 text-sm font-medium text-foreground">
-                Nome completo
-                <Input
-                  name="fullName"
-                  autoComplete="name"
-                  placeholder="Seu nome"
-                  required
-                />
-              </label>
-              <label className="grid gap-2 text-sm font-medium text-foreground">
-                WhatsApp
-                <Input
-                  name="phone"
-                  type="tel"
-                  autoComplete="tel"
-                  placeholder="(11) 99999-9999"
-                  required
-                />
-              </label>
-              <label className="grid gap-2 text-sm font-medium text-foreground">
-                E-mail
-                <Input
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  placeholder="voce@empresa.com"
-                  required
-                />
-              </label>
-              <label className="grid gap-2 text-sm font-medium text-foreground">
-                Senha
-                <Input
-                  name="password"
-                  type="password"
-                  autoComplete="new-password"
-                  minLength={8}
-                  placeholder="Minimo de 8 caracteres"
-                  required
-                />
-              </label>
-              <label className="grid gap-2 text-sm font-medium text-foreground">
-                Confirmacao de senha
-                <Input
-                  name="confirmPassword"
-                  type="password"
-                  autoComplete="new-password"
-                  minLength={8}
-                  placeholder="Repita sua senha"
-                  required
-                />
-              </label>
-              <AuthSubmitButton pendingLabel="Criando conta..." className="w-full">
-                Criar conta
-              </AuthSubmitButton>
-            </form>
+            <SignupForm error={params.error} success={params.success} />
             <p className="text-center text-sm text-muted">
               Ja possui acesso?{" "}
               <Link

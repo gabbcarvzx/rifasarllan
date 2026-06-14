@@ -1,6 +1,7 @@
 "use server";
 
 import { requireAdmin } from "@/lib/auth/require-admin";
+import { createSupabasePublicClient } from "@/lib/supabase/public";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { Raffle, RaffleNumberStatus } from "@/types/database";
 import type { RaffleNumberPublic } from "@/types/raffle";
@@ -24,33 +25,6 @@ const numberStatuses: RaffleNumberStatus[] = [
   "paid",
   "cancelled",
 ];
-
-async function getActivePublicRaffle(raffleId: string) {
-  const supabase = await createSupabaseServerClient();
-  const { data: raffle, error: raffleError } = await supabase
-    .from("raffles")
-    .select("*")
-    .eq("id", raffleId)
-    .eq("status", "active")
-    .maybeSingle();
-
-  if (raffleError || !raffle) {
-    return null;
-  }
-
-  const { data: tenant, error: tenantError } = await supabase
-    .from("tenants")
-    .select("id")
-    .eq("id", raffle.tenant_id)
-    .eq("status", "active")
-    .maybeSingle();
-
-  if (tenantError || !tenant) {
-    return null;
-  }
-
-  return raffle;
-}
 
 async function getOwnedRaffle(raffleId: string, tenantId: string) {
   const supabase = await createSupabaseServerClient();
@@ -96,17 +70,11 @@ async function getAdminNumberScope(raffleId: string) {
 export async function getPublicRaffleNumbers(
   raffleId: string,
 ): Promise<RaffleNumberPublic[]> {
-  const raffle = await getActivePublicRaffle(raffleId);
-
-  if (!raffle) {
-    return [];
-  }
-
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabasePublicClient();
   const { data, error } = await supabase
     .from("public_raffle_numbers")
     .select("number,status")
-    .eq("raffle_id", raffle.id)
+    .eq("raffle_id", raffleId)
     .order("number", { ascending: true });
 
   if (error) {

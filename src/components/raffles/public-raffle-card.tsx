@@ -28,7 +28,6 @@ export function PublicRaffleCard({
             src={raffle.main_image_url}
             alt={raffle.title}
             fill
-            unoptimized
             className="object-cover transition duration-500 hover:scale-105"
             sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
           />

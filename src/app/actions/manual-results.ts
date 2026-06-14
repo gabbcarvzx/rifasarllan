@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { getPublicTenantId } from "@/lib/platform-settings/public";
+import { createSupabasePublicClient } from "@/lib/supabase/public";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type {
   Order,
@@ -18,6 +19,7 @@ import type {
   ManualResultsResult,
   PublicManualResults,
 } from "@/types/manual-results";
+import type { PublicResultRaffleRow } from "@/types/database";
 
 function makeState(
   status: ManualResultActionState["status"],
@@ -543,26 +545,11 @@ export async function getAdminManualResults(
   };
 }
 
-export async function getPublicManualResults(
-  slug: string,
+async function loadPublicManualResults(
+  raffle: PublicResultRaffleRow,
+  tenantId: string,
 ): Promise<ManualResultsResult<PublicManualResults>> {
-  const tenantId = await getPublicTenantId();
-
-  if (!tenantId) {
-    return { data: null, error: "Tenant publico nao configurado." };
-  }
-
-  const supabase = await createSupabaseServerClient();
-  const { data: raffleRows, error: raffleError } = await supabase.rpc(
-    "get_public_result_raffle",
-    { p_slug: slug, p_tenant_id: tenantId },
-  );
-  const raffle = raffleRows?.[0] ?? null;
-
-  if (raffleError || !raffle) {
-    return { data: null, error: "Rifa nao encontrada." };
-  }
-
+  const supabase = createSupabasePublicClient();
   const { data: winners, error: winnersError } = await supabase.rpc(
     "get_public_manual_results",
     { p_raffle_id: raffle.id, p_tenant_id: tenantId },
@@ -579,4 +566,39 @@ export async function getPublicManualResults(
       published: Boolean(winners?.length),
     },
   };
+}
+
+export async function getPublicManualResultsForRaffle(
+  raffle: PublicResultRaffleRow,
+): Promise<ManualResultsResult<PublicManualResults>> {
+  const tenantId = await getPublicTenantId();
+
+  if (!tenantId) {
+    return { data: null, error: "Tenant publico nao configurado." };
+  }
+
+  return loadPublicManualResults(raffle, tenantId);
+}
+
+export async function getPublicManualResults(
+  slug: string,
+): Promise<ManualResultsResult<PublicManualResults>> {
+  const tenantId = await getPublicTenantId();
+
+  if (!tenantId) {
+    return { data: null, error: "Tenant publico nao configurado." };
+  }
+
+  const supabase = createSupabasePublicClient();
+  const { data: raffleRows, error: raffleError } = await supabase.rpc(
+    "get_public_result_raffle",
+    { p_slug: slug, p_tenant_id: tenantId },
+  );
+  const raffle = raffleRows?.[0] ?? null;
+
+  if (raffleError || !raffle) {
+    return { data: null, error: "Rifa nao encontrada." };
+  }
+
+  return loadPublicManualResults(raffle, tenantId);
 }

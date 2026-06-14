@@ -1,6 +1,8 @@
+import "server-only";
+
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import { getSupabaseServerEnv } from "@/lib/env";
+import { getSupabaseServerEnv } from "@/lib/env/server";
 import type { Database } from "@/types/database";
 
 export async function createSupabaseServerClient() {

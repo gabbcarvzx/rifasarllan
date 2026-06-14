@@ -1,6 +1,6 @@
-import { isSupabaseConfigured } from "@/lib/env";
+import { isSupabaseConfigured } from "@/lib/env/public";
 import { getPublicTenantId } from "@/lib/platform-settings/public";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabasePublicClient } from "@/lib/supabase/public";
 import type { Raffle } from "@/types/database";
 
 export async function getPublicActiveRaffles(options?: {
@@ -13,7 +13,7 @@ export async function getPublicActiveRaffles(options?: {
     return [];
   }
 
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabasePublicClient();
   let query = supabase
     .from("raffles")
     .select("*")
@@ -47,7 +47,7 @@ export async function getPublicRaffleBySlug(slug: string): Promise<Raffle | null
     return null;
   }
 
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabasePublicClient();
   const { data, error } = await supabase
     .from("raffles")
     .select("*")

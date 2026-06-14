@@ -45,7 +45,6 @@ export function PublicRaffleGallery({
             alt={title}
             fill
             priority
-            unoptimized
             className="object-cover"
             sizes="(min-width: 1024px) 55vw, 100vw"
           />
@@ -85,7 +84,6 @@ export function PublicRaffleGallery({
                   src={image.image_url}
                   alt={image.alt_text || title}
                   fill
-                  unoptimized
                   className="object-cover"
                   sizes="96px"
                 />

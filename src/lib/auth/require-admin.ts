@@ -1,8 +1,11 @@
+import "server-only";
+
+import { cache } from "react";
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth/require-user";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-export async function requireAdmin() {
+export const requireAdmin = cache(async () => {
   const { user, profile } = await requireUser();
 
   if (profile?.role !== "admin") {
@@ -25,4 +28,4 @@ export async function requireAdmin() {
   }
 
   return { user, profile };
-}
+});

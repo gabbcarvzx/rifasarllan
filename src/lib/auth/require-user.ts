@@ -1,8 +1,11 @@
+import "server-only";
+
+import { cache } from "react";
 import { redirect } from "next/navigation";
-import { isSupabaseConfigured } from "@/lib/env";
+import { isSupabaseConfigured } from "@/lib/env/public";
 import { getAuthContext } from "@/lib/auth/session";
 
-export async function requireUser() {
+export const requireUser = cache(async () => {
   if (!isSupabaseConfigured()) {
     redirect("/login?error=Configure%20o%20Supabase%20para%20usar%20autenticacao.");
   }
@@ -14,4 +17,4 @@ export async function requireUser() {
   }
 
   return { user, profile };
-}
+});

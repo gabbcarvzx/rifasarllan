@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { uploadRaffleImageFile } from "@/lib/storage/raffle-images";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabasePublicClient } from "@/lib/supabase/public";
 import type { Raffle, RaffleImage } from "@/types/database";
 
 export type RaffleMediaActionState = {
@@ -446,7 +447,7 @@ export async function getAdminRaffleImages(raffleId: string) {
 }
 
 export async function getPublicRaffleImages(raffleId: string) {
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabasePublicClient();
   const { data, error } = await supabase
     .from("raffle_images")
     .select("*")

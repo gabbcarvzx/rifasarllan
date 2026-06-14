@@ -60,7 +60,6 @@ export default async function ResultadoPublicoPage({
                   alt={raffle.title}
                   fill
                   priority
-                  unoptimized
                   className="object-cover"
                   sizes="(min-width: 768px) 300px, 100vw"
                 />

@@ -1,7 +1,10 @@
 import { cache } from "react";
-import { isSupabaseConfigured } from "@/lib/env";
+import {
+  getPublicTenantSlug,
+  isSupabaseConfigured,
+} from "@/lib/env/public";
 import { DEFAULT_PLATFORM_SETTINGS } from "@/lib/platform-settings/defaults";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabasePublicClient } from "@/lib/supabase/public";
 import type { PlatformSettings } from "@/types/database";
 import type { ResolvedPlatformSettings } from "@/types/platform-settings";
 
@@ -41,8 +44,8 @@ export const getPublicTenantId = cache(async (): Promise<string | null> => {
     return null;
   }
 
-  const supabase = await createSupabaseServerClient();
-  const configuredSlug = process.env.NEXT_PUBLIC_TENANT_SLUG?.trim();
+  const supabase = createSupabasePublicClient();
+  const configuredSlug = getPublicTenantSlug();
 
   if (configuredSlug) {
     const { data } = await supabase
@@ -87,7 +90,7 @@ export const getPublicPlatformSettings = cache(
       return mergeSettings(null, tenantId);
     }
 
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabasePublicClient();
     const { data, error } = await supabase
       .from("platform_settings")
       .select("*")

@@ -62,7 +62,6 @@ export function PublicPrizesSection({ prizes }: PublicPrizesSectionProps) {
                   src={prize.image_url}
                   alt={prize.title}
                   fill
-                  unoptimized
                   className="object-cover"
                   sizes="(min-width: 1024px) 360px, (min-width: 768px) 50vw, 100vw"
                 />

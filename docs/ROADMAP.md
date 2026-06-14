@@ -215,29 +215,34 @@ Status: concluida.
 - Runbook criado em `docs/PRODUCTION_CHECKLIST.md`.
 - Handoff comercial criado em `docs/CLIENT_HANDOFF.md`.
 
-## Etapa 15: Webhook Asaas
+## Etapa 15: Auditoria de seguranca, envs e performance
 
-Status: pendente.
+Status: concluida.
+
+- Envs publicas e secretas separadas com fronteiras `server-only`.
+- Proxy de autenticacao reduzido a validacao de sessao.
+- Consultas publicas anonimas sem dependencia de cookies.
+- Header, cadastro, resultado publico e grade de numeros otimizados.
+- Imagens remotas preparadas para o otimizador do Next.js e Vercel.
+- Scripts de verificacao de ambiente e vazamento no bundle.
+- Relatorio criado em `docs/SECURITY_PERFORMANCE_AUDIT.md`.
+
+## Etapa 16: Webhook Asaas
+
+Status: opcional e pendente.
 
 - Confirmacao automatica e idempotente de pagamentos.
 - Assinatura e validacao de eventos.
 - Reconciliacao de pedidos e numeros.
 
-## Etapa 16: WhatsApp automatico
+## Etapa 17: WhatsApp automatico
 
-Status: pendente.
+Status: opcional e pendente.
 
 - Mensagens transacionais de reserva e confirmacao.
 - Templates e consentimento operacional.
 
-## Etapa 17: Relatorios avancados
-
-Status: pendente.
-
-- Exportacoes e filtros por periodo.
-- Conversao, ocupacao e indicadores comerciais.
-
-## Etapa 18: Producao final com dominio
+## Etapa 18: Dominio e go-live final
 
 Status: pendente.
 

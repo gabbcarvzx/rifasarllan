@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useDeferredValue, useMemo, useState } from "react";
 import { Check, Filter, Search, Ticket, X } from "lucide-react";
 import { SelectionSummary } from "@/components/raffles/selection-summary";
 import { Badge } from "@/components/ui/badge";
@@ -96,8 +96,11 @@ export function NumberGrid({
   const [fromNumber, setFromNumber] = useState("");
   const [toNumber, setToNumber] = useState("");
   const [pageSize, setPageSize] =
-    useState<(typeof pageSizeOptions)[number]>(500);
+    useState<(typeof pageSizeOptions)[number]>(250);
   const [page, setPage] = useState(1);
+  const deferredSearch = useDeferredValue(search);
+  const deferredFromNumber = useDeferredValue(fromNumber);
+  const deferredToNumber = useDeferredValue(toNumber);
   const stats = useMemo(() => countByStatus(numbers), [numbers]);
   const availableNumbers = useMemo(
     () =>
@@ -117,9 +120,9 @@ export function NumberGrid({
   );
   const selectedLookup = selectedNumbers;
   const filteredNumbers = useMemo(() => {
-    const normalizedSearch = search.trim();
-    const intervalStart = parseOptionalNumber(fromNumber);
-    const intervalEnd = parseOptionalNumber(toNumber);
+    const normalizedSearch = deferredSearch.trim();
+    const intervalStart = parseOptionalNumber(deferredFromNumber);
+    const intervalEnd = parseOptionalNumber(deferredToNumber);
 
     return numbers.filter((item) => {
       const selected =
@@ -154,7 +157,14 @@ export function NumberGrid({
 
       return true;
     });
-  }, [fromNumber, numbers, search, selectedLookup, statusFilter, toNumber]);
+  }, [
+    deferredFromNumber,
+    deferredSearch,
+    deferredToNumber,
+    numbers,
+    selectedLookup,
+    statusFilter,
+  ]);
   const totalPages = Math.max(Math.ceil(filteredNumbers.length / pageSize), 1);
   const currentPage = Math.min(page, totalPages);
   const startIndex = (currentPage - 1) * pageSize;

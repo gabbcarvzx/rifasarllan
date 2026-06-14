@@ -20,7 +20,6 @@ export function PublicWinnerCard({
               src={winner.prize_image_url}
               alt={winner.prize_title}
               fill
-              unoptimized
               className="object-cover"
               sizes="(min-width: 768px) 220px, 100vw"
             />

@@ -6,7 +6,6 @@ export type AsaasConfig = {
   apiKey: string;
   environment: AsaasEnvironment;
   baseUrl: string;
-  webhookToken: string;
 };
 
 function getRequiredValue(name: string, value: string | undefined) {
@@ -30,10 +29,6 @@ export function getAsaasConfig(): AsaasConfig {
     apiKey: getRequiredValue("ASAAS_API_KEY", process.env.ASAAS_API_KEY),
     environment,
     baseUrl: getRequiredValue("ASAAS_BASE_URL", process.env.ASAAS_BASE_URL),
-    webhookToken: getRequiredValue(
-      "ASAAS_WEBHOOK_TOKEN",
-      process.env.ASAAS_WEBHOOK_TOKEN,
-    ),
   };
 
   validateAsaasConfig(config);

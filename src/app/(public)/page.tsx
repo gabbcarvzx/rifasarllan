@@ -77,7 +77,6 @@ export default async function HomePage() {
                   src={settings.logo_url}
                   alt={`Logo ${settings.platform_name}`}
                   fill
-                  unoptimized
                   className="object-contain p-2"
                   sizes="80px"
                 />

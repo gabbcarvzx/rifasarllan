@@ -1,7 +1,7 @@
 "use client";
 
 import { createBrowserClient } from "@supabase/ssr";
-import { getSupabasePublicEnv } from "@/lib/env";
+import { getSupabasePublicEnv } from "@/lib/env/public";
 import type { Database } from "@/types/database";
 
 type SupabaseBrowserClient = ReturnType<typeof createBrowserClient<Database>>;

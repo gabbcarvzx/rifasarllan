@@ -78,7 +78,6 @@ export default async function PedidoPage({ params }: PedidoPageProps) {
                     src={raffle.mainImageUrl}
                     alt={raffle.title}
                     fill
-                    unoptimized
                     className="object-cover"
                     sizes="(min-width: 640px) 220px, 100vw"
                   />

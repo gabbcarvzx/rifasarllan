@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { isSupabaseConfigured } from "@/lib/env";
+import { isSupabaseConfigured } from "@/lib/env/public";
 import { getServerProfile, getServerUser } from "@/lib/auth/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -40,7 +40,7 @@ export async function signInWithEmail(formData: FormData) {
   }
 
   const supabase = await createSupabaseServerClient();
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
   });
@@ -49,7 +49,7 @@ export async function signInWithEmail(formData: FormData) {
     redirectWithMessage("/login", "error", "E-mail ou senha invalidos.");
   }
 
-  const profile = await getServerProfile();
+  const profile = data.user ? await getServerProfile(data.user.id) : null;
 
   if (profile?.role === "admin") {
     redirect("/admin");
@@ -106,7 +106,7 @@ export async function signUpWithEmail(formData: FormData) {
     redirectWithMessage(
       "/cadastro",
       "error",
-      error.message || "Nao foi possivel criar sua conta.",
+      "Nao foi possivel criar sua conta. Revise os dados ou tente outro e-mail.",
     );
   }
 

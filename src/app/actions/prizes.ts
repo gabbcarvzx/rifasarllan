@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { uploadPrizeImageFile } from "@/lib/storage/prize-images";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabasePublicClient } from "@/lib/supabase/public";
 import type { Raffle, RafflePrize } from "@/types/database";
 
 export type PrizeActionState = {
@@ -614,7 +615,7 @@ export async function getRafflePrizes(raffleId: string) {
 }
 
 export async function getPublicRafflePrizes(raffleId: string) {
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabasePublicClient();
   const { data, error } = await supabase
     .from("raffle_prizes")
     .select("*")
@@ -634,7 +635,7 @@ export async function getPublicPrizeSummaries(raffleIds: string[]) {
     return {} as Record<string, PublicPrizeSummary>;
   }
 
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabasePublicClient();
   const { data, error } = await supabase
     .from("raffle_prizes")
     .select("raffle_id,title,position")

@@ -30,7 +30,6 @@ export async function Footer() {
                   src={settings.logo_url}
                   alt={`Logo ${settings.platform_name}`}
                   fill
-                  unoptimized
                   className="object-contain p-1"
                   sizes="40px"
                 />

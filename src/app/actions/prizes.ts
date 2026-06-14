@@ -1,6 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
+import { CACHE_TAGS } from "@/lib/cache-tags";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { uploadPrizeImageFile } from "@/lib/storage/prize-images";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -249,6 +250,7 @@ async function deactivatePrizeMediaByPublicUrl(
 }
 
 function revalidatePrizePaths(raffle: Raffle) {
+  updateTag(CACHE_TAGS.publicRaffles);
   revalidatePath("/");
   revalidatePath("/rifas");
   revalidatePath("/admin");

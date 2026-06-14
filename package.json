@@ -9,6 +9,7 @@
     "lint": "eslint",
     "check:env": "node scripts/check-env.mjs",
     "audit:security": "node scripts/audit-security.mjs",
+    "measure:performance": "node scripts/measure-performance.mjs",
     "analyze": "next experimental-analyze"
   },
   "dependencies": {

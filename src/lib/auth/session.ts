@@ -1,28 +1,39 @@
 import "server-only";
 
 import { cache } from "react";
-import type { User } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { isSupabaseConfigured } from "@/lib/env/public";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import type { AuthContext } from "@/types/auth";
-import type { Profile } from "@/types/database";
+import type { AuthContext, AuthProfile, AuthUser } from "@/types/auth";
 
-export const getServerUser = cache(async (): Promise<User | null> => {
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object"
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
+export const getServerUser = cache(async (): Promise<AuthUser | null> => {
   if (!isSupabaseConfigured()) {
     return null;
   }
 
   const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data, error } = await supabase.auth.getClaims();
+  const claims = data?.claims;
 
-  return user;
+  if (error || !claims || typeof claims.sub !== "string") {
+    return null;
+  }
+
+  return {
+    id: claims.sub,
+    email: typeof claims.email === "string" ? claims.email : null,
+    user_metadata: asRecord(claims.user_metadata),
+  };
 });
 
 export const getServerProfile = cache(
-  async (userId?: string): Promise<Profile | null> => {
+  async (userId?: string): Promise<AuthProfile | null> => {
     if (!isSupabaseConfigured()) {
       return null;
     }
@@ -37,7 +48,9 @@ export const getServerProfile = cache(
     const supabase = await createSupabaseServerClient();
     const { data, error } = await supabase
       .from("profiles")
-      .select("*")
+      .select(
+        "id,full_name,email,phone,role,tenant_id,created_at,updated_at,tenant:tenants(status)",
+      )
       .eq("id", profileUserId)
       .maybeSingle();
 
@@ -45,7 +58,7 @@ export const getServerProfile = cache(
       return null;
     }
 
-    return data;
+    return data as unknown as AuthProfile;
   },
 );
 

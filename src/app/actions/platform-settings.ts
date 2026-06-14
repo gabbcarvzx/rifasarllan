@@ -1,6 +1,8 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
+import { cache } from "react";
+import { CACHE_TAGS } from "@/lib/cache-tags";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { DEFAULT_PLATFORM_SETTINGS } from "@/lib/platform-settings/defaults";
 import { isHexColor } from "@/lib/platform-settings/theme";
@@ -139,6 +141,7 @@ async function deactivateAssetByUrl(tenantId: string, publicUrl?: string | null)
 }
 
 function revalidatePlatform() {
+  updateTag(CACHE_TAGS.platformSettings);
   revalidatePath("/", "layout");
   revalidatePath("/admin/configuracoes");
   revalidatePath("/termos");
@@ -146,7 +149,7 @@ function revalidatePlatform() {
   revalidatePath("/rifas");
 }
 
-export async function getAdminPlatformSettings(): Promise<ResolvedPlatformSettings> {
+const getCachedAdminPlatformSettings = cache(async () => {
   const scope = await getAdminScope();
 
   if (!scope.ok) {
@@ -161,6 +164,10 @@ export async function getAdminPlatformSettings(): Promise<ResolvedPlatformSettin
     .maybeSingle();
 
   return resolveSettings(data, scope.tenantId);
+});
+
+export async function getAdminPlatformSettings(): Promise<ResolvedPlatformSettings> {
+  return getCachedAdminPlatformSettings();
 }
 
 export async function updateGeneralSettings(

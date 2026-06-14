@@ -200,7 +200,7 @@ export default async function RifaDetalhePage({ params }: RifaPageProps) {
               <CircleCheck className="mt-0.5 size-4 shrink-0 text-primary" />
               <p className="text-xs leading-5 text-muted">
                 Selecao visual, reserva vinculada a sua conta e resultado
-                publicado pelo administrador depois da live.
+                publicado pelo organizador depois da live.
               </p>
             </div>
           </Card>
@@ -303,7 +303,7 @@ export default async function RifaDetalhePage({ params }: RifaPageProps) {
                 Resultado transparente
               </h2>
               <p className="mt-1 text-xs leading-5 text-muted">
-                O admin registra vencedores e evidencias da live manualmente.
+                O organizador publica vencedores e evidencias da live.
               </p>
             </div>
           </div>

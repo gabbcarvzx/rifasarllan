@@ -16,9 +16,10 @@ import {
   UserPlus,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { signOut } from "@/app/actions/auth";
 import { buttonVariants } from "@/components/ui/button";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
 type HeaderClientProps = {
@@ -39,10 +40,65 @@ export function HeaderClient({
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
+  const [account, setAccount] = useState({
+    isLoggedIn,
+    isAdmin,
+    displayName,
+  });
+  const hydratedUserId = useRef<string | null>(null);
   const navigation = [
     { href: "/", label: "Inicio" },
     { href: "/rifas", label: "Rifas" },
   ];
+
+  useEffect(() => {
+    let active = true;
+
+    async function hydrateAccount() {
+      const supabase = createSupabaseBrowserClient();
+      const { data, error } = await supabase.auth.getClaims();
+      const userId = data?.claims?.sub;
+
+      if (!active) return;
+
+      if (error || !userId) {
+        hydratedUserId.current = null;
+        setAccount({ isLoggedIn: false, isAdmin: false, displayName: null });
+        return;
+      }
+
+      if (hydratedUserId.current === userId) {
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name,role")
+        .eq("id", userId)
+        .maybeSingle();
+
+      if (!active) return;
+
+      hydratedUserId.current = userId;
+      setAccount({
+        isLoggedIn: true,
+        isAdmin: profile?.role === "admin",
+        displayName:
+          profile?.full_name ||
+          (typeof data.claims.email === "string" ? data.claims.email : null),
+      });
+    }
+
+    void hydrateAccount();
+
+    return () => {
+      active = false;
+    };
+  }, [pathname]);
+
+  const resolvedLoggedIn = account.isLoggedIn;
+  const resolvedAdmin = account.isAdmin;
+  const resolvedDisplayName = account.displayName;
 
   return (
     <header className="sticky top-0 z-40 border-b border-white/10 bg-background/82 backdrop-blur-xl">
@@ -82,7 +138,7 @@ export function HeaderClient({
         </nav>
 
         <div className="hidden items-center gap-3 md:flex">
-          {isLoggedIn ? (
+          {resolvedLoggedIn ? (
             <div className="relative">
               <button
                 type="button"
@@ -91,7 +147,7 @@ export function HeaderClient({
                 aria-haspopup="menu"
                 onClick={() => setAccountOpen((current) => !current)}
               >
-                {isAdmin ? (
+                {resolvedAdmin ? (
                   <ShieldCheck className="size-4" />
                 ) : (
                   <UserCircle className="size-4" />
@@ -105,13 +161,13 @@ export function HeaderClient({
                   className="absolute right-0 top-11 z-50 w-64 overflow-hidden rounded-lg border border-white/10 bg-surface-raised shadow-premium"
                   role="menu"
                 >
-                  {displayName ? (
+                  {resolvedDisplayName ? (
                     <div className="border-b border-white/10 px-4 py-3">
                       <p className="text-xs uppercase tracking-[0.14em] text-muted">
                         Conectado como
                       </p>
                       <p className="mt-1 truncate text-sm font-semibold text-foreground">
-                        {displayName}
+                        {resolvedDisplayName}
                       </p>
                     </div>
                   ) : null}
@@ -143,7 +199,7 @@ export function HeaderClient({
                       <TicketCheck className="size-4 text-accent" />
                       Meus numeros
                     </Link>
-                    {isAdmin ? (
+                    {resolvedAdmin ? (
                       <Link
                         href="/admin"
                         className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-accent hover:bg-accent/10"
@@ -205,13 +261,13 @@ export function HeaderClient({
       {open ? (
         <div className="border-t border-white/10 bg-background/95 px-4 py-4 md:hidden">
           <nav className="mx-auto grid max-w-7xl gap-2">
-            {displayName ? (
+            {resolvedDisplayName ? (
               <div className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-3">
                 <p className="text-xs uppercase tracking-[0.16em] text-muted">
                   Conectado
                 </p>
                 <p className="mt-1 truncate text-sm font-semibold text-foreground">
-                  {displayName}
+                  {resolvedDisplayName}
                 </p>
               </div>
             ) : null}
@@ -225,7 +281,7 @@ export function HeaderClient({
                 {item.label}
               </Link>
             ))}
-            {isLoggedIn ? (
+            {resolvedLoggedIn ? (
               <div className="grid gap-1 border-t border-white/10 pt-2">
                 <Link
                   href="/minha-conta"
@@ -248,7 +304,7 @@ export function HeaderClient({
                 >
                   Meus numeros
                 </Link>
-                {isAdmin ? (
+                {resolvedAdmin ? (
                   <Link
                     href="/admin"
                     className="rounded-lg px-3 py-3 text-sm font-semibold text-accent hover:bg-accent/10"
@@ -260,7 +316,7 @@ export function HeaderClient({
               </div>
             ) : null}
             <div className="mt-2 grid grid-cols-2 gap-2">
-              {isLoggedIn ? (
+              {resolvedLoggedIn ? (
                 <>
                   <Link
                     href="/minha-conta"

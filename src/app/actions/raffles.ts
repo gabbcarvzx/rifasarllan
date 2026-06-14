@@ -1,6 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
+import { CACHE_TAGS } from "@/lib/cache-tags";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { normalizeSlug } from "@/lib/slug";
@@ -259,6 +260,7 @@ function getDatabaseMessage(errorMessage?: string) {
 }
 
 function revalidateRafflePaths(slug?: string | null) {
+  updateTag(CACHE_TAGS.publicRaffles);
   revalidatePath("/");
   revalidatePath("/rifas");
   revalidatePath("/admin");

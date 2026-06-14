@@ -38,8 +38,8 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             Entre na sua conta
           </h1>
           <p className="mt-4 max-w-xl text-sm leading-7 text-muted">
-            Login real com Supabase Auth, cookies seguros e redirecionamento
-            por role. Admins entram no painel; clientes vao para a conta.
+            Acesse seus pedidos, numeros reservados e resultados em um ambiente
+            protegido.
           </p>
         </div>
 
@@ -50,7 +50,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             </div>
             <CardTitle>Acessar plataforma</CardTitle>
             <CardDescription>
-              Use seu e-mail administrativo ou conta de participante.
+              Informe o e-mail e a senha usados no cadastro.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">

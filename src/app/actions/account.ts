@@ -13,11 +13,7 @@ import type {
   MyProfile,
   ParticipantRaffle,
 } from "@/types/account";
-import type {
-  Order,
-  OrderItem,
-  Raffle,
-} from "@/types/database";
+import type { OrderItem, OrderStatus, Raffle } from "@/types/database";
 
 type SupabaseServerClient = Awaited<
   ReturnType<typeof createSupabaseServerClient>
@@ -25,6 +21,14 @@ type SupabaseServerClient = Awaited<
 
 const raffleSelect =
   "id,title,slug,main_image_url,status,draw_date" as const;
+const orderListSelect =
+  "id,raffle_id,amount,status,created_at,updated_at" as const;
+const orderDetailsSelect =
+  "id,tenant_id,user_id,raffle_id,customer_name,customer_email,customer_phone,amount,status,payment_method,created_at,updated_at" as const;
+const orderItemSelect =
+  "id,order_id,raffle_number_id,number,price,created_at" as const;
+const participantPaymentSelect =
+  "id,order_id,pix_qr_code,pix_copy_paste,amount,status,created_at" as const;
 
 function getFormString(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -55,19 +59,13 @@ function toParticipantRaffle(
   };
 }
 
-async function expireOldReservations(supabase: SupabaseServerClient) {
-  const { error } = await supabase.rpc("expire_old_reservations", {});
-
-  return !error;
-}
-
 async function getOwnedOrders(
   supabase: SupabaseServerClient,
   userId: string,
 ) {
   return supabase
     .from("orders")
-    .select("*")
+    .select(orderListSelect)
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
 }
@@ -75,22 +73,8 @@ async function getOwnedOrders(
 export async function getMyProfile(): Promise<
   AccountDataResult<MyProfile | null>
 > {
-  const { user } = await requireUser();
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  if (error) {
-    return {
-      data: null,
-      error: "Nao foi possivel carregar os dados da sua conta.",
-    };
-  }
-
-  return { data };
+  const { profile } = await requireUser();
+  return { data: profile };
 }
 
 export async function updateMyProfile(
@@ -134,7 +118,6 @@ export async function updateMyProfile(
 export async function getMyOrders(): Promise<AccountDataResult<MyOrder[]>> {
   const { user } = await requireUser();
   const supabase = await createSupabaseServerClient();
-  const expirationOk = await expireOldReservations(supabase);
   const { data: orders, error } = await getOwnedOrders(supabase, user.id);
 
   if (error) {
@@ -142,12 +125,7 @@ export async function getMyOrders(): Promise<AccountDataResult<MyOrder[]>> {
   }
 
   if (!orders?.length) {
-    return {
-      data: [],
-      error: expirationOk
-        ? undefined
-        : "As reservas antigas nao puderam ser atualizadas agora.",
-    };
+    return { data: [] };
   }
 
   const orderIds = orders.map((order) => order.id);
@@ -188,7 +166,10 @@ export async function getMyOrders(): Promise<AccountDataResult<MyOrder[]>> {
 
   const data: MyOrder[] = orders.map((order) => ({
     id: order.id,
-    status: order.status,
+    status: getEffectiveOrderStatus(
+      order.status,
+      reservationByOrder.get(order.id) ?? null,
+    ),
     amount: order.amount,
     createdAt: order.created_at,
     updatedAt: order.updated_at,
@@ -200,24 +181,34 @@ export async function getMyOrders(): Promise<AccountDataResult<MyOrder[]>> {
     ),
   }));
 
-  return {
-    data,
-    error: expirationOk
-      ? undefined
-      : "As reservas antigas nao puderam ser atualizadas agora.",
-  };
+  return { data };
 }
 
-function getNumberStatus(order: Order): MyNumberStatus {
-  if (order.status === "paid") {
+function getEffectiveOrderStatus(
+  status: OrderStatus,
+  reservedUntil: string | null,
+): OrderStatus {
+  if (
+    status === "pending" &&
+    reservedUntil &&
+    new Date(reservedUntil).getTime() <= Date.now()
+  ) {
+    return "expired";
+  }
+
+  return status;
+}
+
+function getNumberStatus(status: OrderStatus): MyNumberStatus {
+  if (status === "paid") {
     return "paid";
   }
 
-  if (order.status === "pending") {
+  if (status === "pending") {
     return "reserved";
   }
 
-  if (order.status === "expired") {
+  if (status === "expired") {
     return "expired";
   }
 
@@ -229,7 +220,6 @@ export async function getMyNumbers(): Promise<
 > {
   const { user } = await requireUser();
   const supabase = await createSupabaseServerClient();
-  const expirationOk = await expireOldReservations(supabase);
   const { data: orders, error } = await getOwnedOrders(supabase, user.id);
 
   if (error) {
@@ -245,7 +235,7 @@ export async function getMyNumbers(): Promise<
   const [itemsResult, rafflesResult, reservationsResult] = await Promise.all([
     supabase
       .from("order_items")
-      .select("*")
+      .select(orderItemSelect)
       .in("order_id", orderIds)
       .order("number", { ascending: true }),
     supabase.from("raffles").select(raffleSelect).in("id", raffleIds),
@@ -280,6 +270,11 @@ export async function getMyNumbers(): Promise<
       return;
     }
 
+    const reservedUntil = reservationByOrder.get(order.id) ?? null;
+    const effectiveStatus = getEffectiveOrderStatus(
+      order.status,
+      reservedUntil,
+    );
     const existing = groupByRaffle.get(order.raffle_id) ?? {
       raffle: toParticipantRaffle(
         raffleById.get(order.raffle_id) ?? null,
@@ -291,21 +286,16 @@ export async function getMyNumbers(): Promise<
     existing.numbers.push({
       id: item.id,
       number: item.number,
-      status: getNumberStatus(order),
+      status: getNumberStatus(effectiveStatus),
       orderId: order.id,
-      orderStatus: order.status,
+      orderStatus: effectiveStatus,
       reservedAt: order.created_at,
-      reservedUntil: reservationByOrder.get(order.id) ?? null,
+      reservedUntil,
     });
     groupByRaffle.set(order.raffle_id, existing);
   });
 
-  return {
-    data: [...groupByRaffle.values()],
-    error: expirationOk
-      ? undefined
-      : "As reservas antigas nao puderam ser atualizadas agora.",
-  };
+  return { data: [...groupByRaffle.values()] };
 }
 
 export async function getMyOrderById(
@@ -313,11 +303,10 @@ export async function getMyOrderById(
 ): Promise<AccountDataResult<MyOrderDetails | null>> {
   const { user } = await requireUser();
   const supabase = await createSupabaseServerClient();
-  await expireOldReservations(supabase);
 
   const { data: order, error } = await supabase
     .from("orders")
-    .select("*")
+    .select(orderDetailsSelect)
     .eq("id", orderId)
     .eq("user_id", user.id)
     .maybeSingle();
@@ -330,7 +319,7 @@ export async function getMyOrderById(
     await Promise.all([
       supabase
         .from("order_items")
-        .select("*")
+        .select(orderItemSelect)
         .eq("order_id", order.id)
         .order("number", { ascending: true }),
       supabase
@@ -346,7 +335,7 @@ export async function getMyOrderById(
         .limit(1),
       supabase
         .from("payments")
-        .select("*")
+        .select(participantPaymentSelect)
         .eq("order_id", order.id)
         .order("created_at", { ascending: false })
         .limit(1)
@@ -357,12 +346,17 @@ export async function getMyOrderById(
     return { data: null, error: "Nao foi possivel carregar este pedido." };
   }
 
+  const reservedUntil = reservationResult.data?.[0]?.reserved_until ?? null;
+
   return {
     data: {
-      order,
+      order: {
+        ...order,
+        status: getEffectiveOrderStatus(order.status, reservedUntil),
+      },
       items: (itemsResult.data ?? []) as OrderItem[],
       raffle: toParticipantRaffle(raffleResult.data, order.raffle_id),
-      reservedUntil: reservationResult.data?.[0]?.reserved_until ?? null,
+      reservedUntil,
       payment: paymentResult.data,
     },
   };

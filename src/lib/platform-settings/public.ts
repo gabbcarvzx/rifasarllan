@@ -1,4 +1,6 @@
+import { unstable_cache } from "next/cache";
 import { cache } from "react";
+import { CACHE_TAGS } from "@/lib/cache-tags";
 import {
   getPublicTenantSlug,
   isSupabaseConfigured,
@@ -40,67 +42,61 @@ function mergeSettings(
 }
 
 export const getPublicTenantId = cache(async (): Promise<string | null> => {
-  if (!isSupabaseConfigured()) {
-    return null;
-  }
-
-  const supabase = createSupabasePublicClient();
-  const configuredSlug = getPublicTenantSlug();
-
-  if (configuredSlug) {
-    const { data } = await supabase
-      .from("tenants")
-      .select("id")
-      .eq("slug", configuredSlug)
-      .eq("status", "active")
-      .maybeSingle();
-
-    if (data?.id) {
-      return data.id;
-    }
-  }
-
-  const { data: configuredSettings } = await supabase
-    .from("platform_settings")
-    .select("tenant_id")
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-
-  if (configuredSettings?.tenant_id) {
-    return configuredSettings.tenant_id;
-  }
-
-  const { data: tenant } = await supabase
-    .from("tenants")
-    .select("id")
-    .eq("status", "active")
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-
-  return tenant?.id ?? null;
+  const bootstrap = await getPublicPlatformBootstrap(getPublicTenantSlug());
+  return bootstrap.tenantId;
 });
 
 export const getPublicPlatformSettings = cache(
   async (): Promise<ResolvedPlatformSettings> => {
-    const tenantId = await getPublicTenantId();
+    const bootstrap = await getPublicPlatformBootstrap(getPublicTenantSlug());
+    return mergeSettings(bootstrap.settings, bootstrap.tenantId);
+  },
+);
 
-    if (!tenantId || !isSupabaseConfigured()) {
-      return mergeSettings(null, tenantId);
+type PlatformBootstrap = {
+  tenantId: string | null;
+  settings: PlatformSettings | null;
+};
+
+type TenantWithSettings = {
+  id: string;
+  platform_settings: PlatformSettings[] | PlatformSettings | null;
+};
+
+const getPublicPlatformBootstrap = unstable_cache(
+  async (configuredSlug: string | null): Promise<PlatformBootstrap> => {
+    if (!isSupabaseConfigured()) {
+      return { tenantId: null, settings: null };
     }
 
     const supabase = createSupabasePublicClient();
-    const { data, error } = await supabase
-      .from("platform_settings")
-      .select("*")
-      .eq("tenant_id", tenantId)
-      .maybeSingle();
+    let query = supabase
+      .from("tenants")
+      .select("id,platform_settings(*)")
+      .eq("status", "active")
+      .order("created_at", { ascending: true })
+      .limit(1);
 
-    if (error) {
-      return mergeSettings(null, tenantId);
+    if (configuredSlug) {
+      query = query.eq("slug", configuredSlug);
     }
 
-    return mergeSettings(data, tenantId);
+    const { data, error } = await query.maybeSingle();
+
+    if (error || !data) {
+      return { tenantId: null, settings: null };
+    }
+
+    const tenant = data as unknown as TenantWithSettings;
+    const embeddedSettings = Array.isArray(tenant.platform_settings)
+      ? tenant.platform_settings[0] ?? null
+      : tenant.platform_settings;
+
+    return {
+      tenantId: tenant.id,
+      settings: embeddedSettings ?? null,
+    };
   },
+  ["public-platform-bootstrap"],
+  { revalidate: 300, tags: [CACHE_TAGS.platformSettings] },
 );

@@ -4,15 +4,20 @@ import { redirect } from "next/navigation";
 import { isSupabaseConfigured } from "@/lib/env/public";
 import { getServerProfile, getServerUser } from "@/lib/auth/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import type { SignUpActionState } from "@/types/auth";
 
 function getFormString(formData: FormData, key: string) {
   const value = formData.get(key);
   return typeof value === "string" ? value.trim() : "";
 }
 
-function redirectWithMessage(path: string, type: "error" | "success", message: string) {
+function redirectWithMessage(
+  path: string,
+  type: "error" | "success",
+  message: string,
+): never {
   const separator = path.includes("?") ? "&" : "?";
-  redirect(`${path}${separator}${type}=${encodeURIComponent(message)}`);
+  return redirect(`${path}${separator}${type}=${encodeURIComponent(message)}`);
 }
 
 export async function getCurrentUser() {
@@ -58,7 +63,46 @@ export async function signInWithEmail(formData: FormData) {
   redirectWithMessage("/minha-conta", "success", "Login realizado com sucesso.");
 }
 
-export async function signUpWithEmail(formData: FormData) {
+function signUpError(message: string): SignUpActionState {
+  return { status: "error", message, updatedAt: Date.now() };
+}
+
+function getSignUpErrorMessage(code?: string) {
+  if (code === "user_already_exists") {
+    return "Ja existe uma conta para este e-mail. Tente entrar ou recuperar seu acesso.";
+  }
+
+  if (code === "weak_password") {
+    return "A senha foi considerada fraca. Use pelo menos 8 caracteres e combine letras e numeros.";
+  }
+
+  if (code === "email_address_invalid") {
+    return "O e-mail informado nao e valido.";
+  }
+
+  if (code === "email_not_confirmed") {
+    return "Este e-mail ainda precisa ser confirmado.";
+  }
+
+  if (code === "signup_disabled" || code === "email_provider_disabled") {
+    return "Novos cadastros estao temporariamente indisponiveis.";
+  }
+
+  if (code === "over_email_send_rate_limit" || code === "over_request_rate_limit") {
+    return "Muitas tentativas foram realizadas. Aguarde alguns minutos e tente novamente.";
+  }
+
+  if (code === "database_error") {
+    return "A conta nao foi finalizada porque o perfil nao pode ser criado. Tente novamente ou contate o suporte.";
+  }
+
+  return "Nao foi possivel criar sua conta agora. Revise os dados e tente novamente.";
+}
+
+export async function signUpWithEmail(
+  _state: SignUpActionState,
+  formData: FormData,
+): Promise<SignUpActionState> {
   const fullName = getFormString(formData, "fullName");
   const phone = getFormString(formData, "phone");
   const email = getFormString(formData, "email").toLowerCase();
@@ -66,27 +110,19 @@ export async function signUpWithEmail(formData: FormData) {
   const confirmPassword = getFormString(formData, "confirmPassword");
 
   if (!fullName || !phone || !email || !password || !confirmPassword) {
-    redirectWithMessage("/cadastro", "error", "Preencha todos os campos.");
+    return signUpError("Preencha todos os campos.");
   }
 
   if (password.length < 8) {
-    redirectWithMessage(
-      "/cadastro",
-      "error",
-      "A senha precisa ter pelo menos 8 caracteres.",
-    );
+    return signUpError("A senha precisa ter pelo menos 8 caracteres.");
   }
 
   if (password !== confirmPassword) {
-    redirectWithMessage("/cadastro", "error", "As senhas nao coincidem.");
+    return signUpError("As senhas nao coincidem.");
   }
 
   if (!isSupabaseConfigured()) {
-    redirectWithMessage(
-      "/cadastro",
-      "error",
-      "Supabase ainda nao esta configurado neste ambiente.",
-    );
+    return signUpError("O cadastro ainda nao esta disponivel neste ambiente.");
   }
 
   const supabase = await createSupabaseServerClient();
@@ -103,11 +139,11 @@ export async function signUpWithEmail(formData: FormData) {
   });
 
   if (error) {
-    redirectWithMessage(
-      "/cadastro",
-      "error",
-      "Nao foi possivel criar sua conta. Revise os dados ou tente outro e-mail.",
-    );
+    console.error("auth.signup.failed", {
+      code: error.code ?? "unknown",
+      status: error.status ?? null,
+    });
+    return signUpError(getSignUpErrorMessage(error.code));
   }
 
   if (data.session) {

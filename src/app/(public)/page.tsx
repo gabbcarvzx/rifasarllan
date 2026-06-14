@@ -9,50 +9,45 @@ import {
   Sparkles,
   TicketCheck,
 } from "lucide-react";
-import { getPublicPrizeSummaries } from "@/app/actions/prizes";
 import { PublicRaffleCard } from "@/components/raffles/public-raffle-card";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
-import { getPublicActiveRaffles } from "@/lib/raffles/public-queries";
+import { getPublicRaffleCatalog } from "@/lib/raffles/public-queries";
 import { getPublicPlatformSettings } from "@/lib/platform-settings/public";
-
-export const dynamic = "force-dynamic";
 
 const trustItems = [
   {
-    title: "Gestao visual",
-    description: "Painel para criar campanhas, controlar status e operar por tenant.",
+    title: "Participacao organizada",
+    description: "Rifas, premios, numeros e reservas reunidos em uma experiencia clara.",
     icon: BadgeCheck,
   },
   {
-    title: "Base segura",
-    description: "Supabase Auth, RLS e isolamento por tenant no centro da arquitetura.",
+    title: "Conta protegida",
+    description: "Seus pedidos e numeros ficam vinculados ao seu acesso pessoal.",
     icon: LockKeyhole,
   },
   {
-    title: "Escala comercial",
-    description: "Fundacao pronta para Pix, webhook, reservas e dashboard financeiro.",
+    title: "Resultado transparente",
+    description: "Vencedores e comprovacoes podem ser publicados depois da live.",
     icon: Sparkles,
   },
 ];
 
 const steps = [
   "Escolha uma rifa ativa",
-  "Confira detalhes e regras",
-  "Aguarde a grade de numeros",
-  "Acompanhe os proximos recursos",
+  "Selecione seus numeros",
+  "Confirme seus dados e a reserva",
+  "Acompanhe tudo pela sua conta",
 ];
 
 export default async function HomePage() {
-  const [raffles, settings] = await Promise.all([
-    getPublicActiveRaffles({ limit: 3 }),
+  const [catalog, settings] = await Promise.all([
+    getPublicRaffleCatalog({ limit: 3 }),
     getPublicPlatformSettings(),
   ]);
-  const prizeSummaries = await getPublicPrizeSummaries(
-    raffles.map((raffle) => raffle.id),
-  );
+  const { raffles, prizeSummaries } = catalog;
 
   return (
     <>
@@ -97,21 +92,21 @@ export default async function HomePage() {
                 <ArrowRight className="size-4" />
               </Link>
               <Link
-                href="/admin"
+                href="#como-funciona"
                 className={buttonVariants({
                   variant: "secondary",
                   size: "lg",
                   className: "sm:w-auto",
                 })}
               >
-                Ver painel admin
+                Como funciona
               </Link>
             </div>
             <div className="mt-10 grid max-w-xl grid-cols-3 gap-3">
               {[
-                ["RLS", "dados seguros"],
-                ["Auth", "conta protegida"],
-                ["24h", "acesso online"],
+                ["Conta", "acesso protegido"],
+                ["15 min", "reserva segura"],
+                ["Ao vivo", "resultado claro"],
               ].map(([value, label]) => (
                 <div
                   key={label}
@@ -137,8 +132,8 @@ export default async function HomePage() {
                 Campanhas em destaque
               </h2>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-muted">
-                Campanhas ativas carregadas do Supabase, priorizando rifas
-                marcadas como destaque pelo admin.
+                Confira os premios, valores e datas das campanhas abertas para
+                participacao.
               </p>
             </div>
             <Link
@@ -163,7 +158,7 @@ export default async function HomePage() {
             <EmptyState
               icon={SearchX}
               title="Nenhuma rifa ativa publicada"
-              description="Assim que o admin criar uma rifa ativa, ela aparece nesta area com dados reais."
+              description="Novas campanhas aparecerao aqui assim que forem abertas para participacao."
               action={
                 <Link
                   href="/rifas"
@@ -180,14 +175,13 @@ export default async function HomePage() {
       <section className="border-b border-white/10 py-16 sm:py-20">
         <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-[0.95fr_1.05fr] lg:px-8">
           <div>
-            <Badge variant="info">Confianca operacional</Badge>
+            <Badge variant="info">Confianca em cada etapa</Badge>
             <h2 className="mt-4 text-3xl font-bold tracking-tight text-foreground">
-              Construida para virar operacao, nao apenas pagina.
+              Uma experiencia simples para participar com tranquilidade.
             </h2>
             <p className="mt-4 text-sm leading-7 text-muted">
-              A plataforma agora possui autenticacao, isolamento de tenant e CRUD
-              real de rifas. As camadas de storage, reservas, pagamentos e sorteio
-              entram com fronteiras claras nas proximas etapas.
+              Consulte regras, escolha numeros, acompanhe suas reservas e veja
+              resultados publicados pelo organizador em um unico lugar.
             </p>
           </div>
           <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
@@ -210,13 +204,13 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="bg-surface/30 py-16 sm:py-20">
+      <section id="como-funciona" className="scroll-mt-20 bg-surface/30 py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
             <div>
               <Badge variant="success">Como funciona</Badge>
               <h2 className="mt-4 text-3xl font-bold tracking-tight text-foreground">
-                Fluxo simples para o cliente, controle completo para o admin.
+                Da escolha dos numeros ao acompanhamento do resultado.
               </h2>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
@@ -243,8 +237,8 @@ export default async function HomePage() {
                   Pronto para conferir as campanhas?
                 </h2>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
-                  A vitrine publica ja consome rifas reais com status ativo e
-                  respeita tenants ativos.
+                  Encontre uma campanha ativa e escolha seus numeros em poucos
+                  passos.
                 </p>
               </div>
               <Link

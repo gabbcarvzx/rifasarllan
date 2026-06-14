@@ -35,8 +35,8 @@ export default async function CadastroPage({ searchParams }: CadastroPageProps) 
             Crie seu acesso
           </h1>
           <p className="mt-4 max-w-xl text-sm leading-7 text-muted">
-            Cadastro real com Supabase Auth. O profile e criado pelo trigger do
-            banco e ja nasce como cliente ate ser promovido a admin.
+            Crie sua conta para reservar numeros e acompanhar cada participacao
+            com praticidade.
           </p>
         </div>
 
@@ -47,7 +47,7 @@ export default async function CadastroPage({ searchParams }: CadastroPageProps) 
             </div>
             <CardTitle>Cadastro de usuario</CardTitle>
             <CardDescription>
-              Prepare sua conta para acompanhar rifas e reservas.
+              Seus dados ajudam a identificar e organizar suas reservas.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">

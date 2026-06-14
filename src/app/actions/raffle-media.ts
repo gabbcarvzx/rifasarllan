@@ -1,6 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
+import { CACHE_TAGS } from "@/lib/cache-tags";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { uploadRaffleImageFile } from "@/lib/storage/raffle-images";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -119,6 +120,7 @@ async function deactivateMediaById(mediaFileId: string | null, tenantId: string)
 }
 
 function revalidateRaffleMediaPaths(raffle: Raffle) {
+  updateTag(CACHE_TAGS.publicRaffles);
   revalidatePath("/");
   revalidatePath("/rifas");
   revalidatePath("/admin/rifas");

@@ -59,7 +59,16 @@ export type MyOrderDetails = {
   items: OrderItem[];
   raffle: ParticipantRaffle;
   reservedUntil: string | null;
-  payment: Payment | null;
+  payment: Pick<
+    Payment,
+    | "id"
+    | "order_id"
+    | "pix_qr_code"
+    | "pix_copy_paste"
+    | "amount"
+    | "status"
+    | "created_at"
+  > | null;
 };
 
 export type MyProfile = Profile;

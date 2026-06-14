@@ -1,24 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SearchX } from "lucide-react";
-import { getPublicPrizeSummaries } from "@/app/actions/prizes";
 import { PublicRaffleCard } from "@/components/raffles/public-raffle-card";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { getPublicActiveRaffles } from "@/lib/raffles/public-queries";
-
-export const dynamic = "force-dynamic";
+import { getPublicRaffleCatalog } from "@/lib/raffles/public-queries";
 
 export const metadata: Metadata = {
   title: "Rifas",
 };
 
 export default async function RifasPage() {
-  const raffles = await getPublicActiveRaffles();
-  const prizeSummaries = await getPublicPrizeSummaries(
-    raffles.map((raffle) => raffle.id),
-  );
+  const { raffles, prizeSummaries } = await getPublicRaffleCatalog();
 
   return (
     <section className="bg-surface/30 px-4 py-12 sm:px-6 lg:px-8">

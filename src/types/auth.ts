@@ -1,7 +1,22 @@
-import type { User } from "@supabase/supabase-js";
-import type { Profile } from "@/types/database";
+import type { Profile, TenantStatus } from "@/types/database";
+
+export type AuthUser = {
+  id: string;
+  email: string | null;
+  user_metadata: Record<string, unknown>;
+};
+
+export type AuthProfile = Profile & {
+  tenant: { status: TenantStatus } | null;
+};
 
 export type AuthContext = {
-  user: User | null;
-  profile: Profile | null;
+  user: AuthUser | null;
+  profile: AuthProfile | null;
+};
+
+export type SignUpActionState = {
+  status: "idle" | "error";
+  message: string;
+  updatedAt?: number;
 };

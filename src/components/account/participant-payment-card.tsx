@@ -4,9 +4,13 @@ import { PixCopyPaste } from "@/components/payments/pix-copy-paste";
 import { PixQRCode } from "@/components/payments/pix-qr-code";
 import { Card } from "@/components/ui/card";
 import { formatCurrency, formatDateTime } from "@/lib/format";
-import type { Payment } from "@/types/database";
+import type { MyOrderDetails } from "@/types/account";
 
-export function ParticipantPaymentCard({ payment }: { payment: Payment | null }) {
+export function ParticipantPaymentCard({
+  payment,
+}: {
+  payment: MyOrderDetails["payment"];
+}) {
   if (!payment) {
     return (
       <Card className="border-accent/25 bg-accent/[0.06] p-5">

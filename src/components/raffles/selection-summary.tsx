@@ -55,7 +55,10 @@ export function SelectionSummary({
   }, [router, state.status, state.updatedAt]);
 
   return (
-    <form action={formAction} className="rounded-lg border border-white/10 bg-black/18 p-4">
+    <form
+      action={formAction}
+      className="sticky bottom-3 z-20 rounded-lg border border-primary/20 bg-black/85 p-4 shadow-2xl shadow-black/30 backdrop-blur xl:bottom-auto xl:shadow-none"
+    >
       <input type="hidden" name="raffleId" value={raffleId} />
       <input type="hidden" name="raffleSlug" value={raffleSlug} />
       <input type="hidden" name="selectedNumbers" value={selectedNumbers.join(",")} />
@@ -67,8 +70,8 @@ export function SelectionSummary({
             Resumo da selecao
           </div>
           <p className="mt-1 text-xs leading-5 text-muted">
-            A reserva bloqueia os numeros por 15 minutos e cria um pedido na sua
-            conta. O pagamento online permanece pausado.
+            Confirme seus dados para bloquear os numeros por 15 minutos e criar
+            o pedido na sua conta.
           </p>
         </div>
         <span className="rounded-full border border-primary/25 bg-primary/12 px-3 py-1 text-xs font-semibold text-emerald-100">
@@ -173,7 +176,7 @@ export function SelectionSummary({
         </Button>
         <Button type="submit" disabled={quantity === 0 || isPending} className="w-full">
           {isPending ? <Loader2 className="size-4 animate-spin" /> : null}
-          {isPending ? "Reservando..." : "Reservar numeros"}
+          {isPending ? "Reservando..." : "Reservar agora"}
         </Button>
       </div>
     </form>

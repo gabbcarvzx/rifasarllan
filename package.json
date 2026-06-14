@@ -2,10 +2,12 @@
   "name": "rifa-arllan",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "npm run check:env && next build",
     "start": "next start",
+    "test": "node --test tests/**/*.test.mjs",
     "lint": "eslint",
     "check:env": "node scripts/check-env.mjs",
     "audit:security": "node scripts/audit-security.mjs",

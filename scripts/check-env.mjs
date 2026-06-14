@@ -66,6 +66,20 @@ if (publicUrl) {
   }
 }
 
+const publicAnonKey = getValue("NEXT_PUBLIC_SUPABASE_ANON_KEY");
+if (publicAnonKey) {
+  if (/\s/.test(publicAnonKey)) {
+    errors.push(
+      "NEXT_PUBLIC_SUPABASE_ANON_KEY precisa conter somente a chave, sem espacos ou quebras de linha.",
+    );
+  } else if (
+    publicAnonKey.split(".").length !== 3 &&
+    !publicAnonKey.startsWith("sb_publishable_")
+  ) {
+    errors.push("NEXT_PUBLIC_SUPABASE_ANON_KEY possui formato invalido.");
+  }
+}
+
 for (const forbidden of [
   "NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY",
   "NEXT_PUBLIC_ASAAS_API_KEY",

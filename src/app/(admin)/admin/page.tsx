@@ -6,6 +6,7 @@ import { getAdminPlatformSettings } from "@/app/actions/platform-settings";
 import { AdminAlerts } from "@/components/admin/dashboard/admin-alerts";
 import { DashboardEmptyState } from "@/components/admin/dashboard/dashboard-empty-state";
 import { DashboardSummaryCards } from "@/components/admin/dashboard/dashboard-summary-cards";
+import { ConversionPanel } from "@/components/admin/dashboard/conversion-panel";
 import { RaffleOccupancyCard } from "@/components/admin/dashboard/raffle-occupancy-card";
 import { RecentOrdersTable } from "@/components/admin/dashboard/recent-orders-table";
 import { RevenueOverview } from "@/components/admin/dashboard/revenue-overview";
@@ -69,6 +70,7 @@ export default async function AdminDashboardPage() {
       ) : (
         <>
           <DashboardSummaryCards stats={stats} />
+          <ConversionPanel stats={stats} />
           <RevenueOverview revenue={stats.revenue} />
 
           <section aria-labelledby="raffle-occupancy-title">

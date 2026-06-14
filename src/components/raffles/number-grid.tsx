@@ -1,13 +1,17 @@
 "use client";
 
 import { useDeferredValue, useMemo, useState } from "react";
-import { Check, Filter, Search, Ticket, X } from "lucide-react";
+import { Check, Filter, Search, Shuffle, Ticket, X, Zap } from "lucide-react";
 import { SelectionSummary } from "@/components/raffles/selection-summary";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import {
+  addRandomAvailableNumbers,
+  addTopAvailableNumbers,
+} from "@/lib/raffles/quick-selection";
 import { cn } from "@/lib/utils";
 import type {
   NumberGridStatus,
@@ -58,6 +62,7 @@ const statusOptions: Array<{ value: NumberGridStatus; label: string }> = [
 ];
 
 const pageSizeOptions = [250, 500, 1000] as const;
+const quickPickOptions = [5, 10, 20] as const;
 
 function parseOptionalNumber(value: string) {
   const parsed = Number.parseInt(value, 10);
@@ -102,6 +107,10 @@ export function NumberGrid({
   const deferredFromNumber = useDeferredValue(fromNumber);
   const deferredToNumber = useDeferredValue(toNumber);
   const stats = useMemo(() => countByStatus(numbers), [numbers]);
+  const occupiedCount = stats.reserved + stats.paid;
+  const occupancyPercentage =
+    numbers.length > 0 ? Math.min(100, (occupiedCount / numbers.length) * 100) : 0;
+  const availableCount = stats.available;
   const availableNumbers = useMemo(
     () =>
       new Set(
@@ -196,6 +205,26 @@ export function NumberGrid({
     setSelectedNumbers(new Set());
   }
 
+  function selectTopQuantity(quantity: number) {
+    setSelectedNumbers((current) =>
+      addTopAvailableNumbers({
+        numbers,
+        selectedNumbers: current,
+        quantity,
+      }),
+    );
+  }
+
+  function selectRandomQuantity(quantity: number) {
+    setSelectedNumbers((current) =>
+      addRandomAvailableNumbers({
+        numbers,
+        selectedNumbers: current,
+        quantity,
+      }),
+    );
+  }
+
   function clearFilters() {
     setStatusFilter("all");
     setSearch("");
@@ -234,12 +263,64 @@ export function NumberGrid({
         </div>
       </div>
 
+      <div className="mt-5 rounded-lg border border-primary/20 bg-primary/[0.06] p-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-semibold text-foreground">
+              {availableCount.toLocaleString("pt-BR")} numeros disponiveis
+            </p>
+            <p className="mt-1 text-xs leading-5 text-muted">
+              {occupiedCount.toLocaleString("pt-BR")} ja estao reservados ou vendidos.
+            </p>
+          </div>
+          <span className="font-mono text-sm font-bold text-accent">
+            {occupancyPercentage.toLocaleString("pt-BR", {
+              maximumFractionDigits: 1,
+            })}
+            % ocupada
+          </span>
+        </div>
+        <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/[0.08]">
+          <div
+            className="h-full rounded-full bg-primary"
+            style={{ width: `${occupancyPercentage}%` }}
+          />
+        </div>
+      </div>
+
       <div className="mt-6 grid gap-5 xl:grid-cols-[1fr_360px]">
         <div className="min-w-0">
           <div className="grid gap-3 rounded-lg border border-white/10 bg-black/18 p-4">
-            <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-              <Filter className="size-4 text-accent" />
-              Filtros e busca
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                <Filter className="size-4 text-accent" />
+                Filtros e busca
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {quickPickOptions.map((quantity) => (
+                  <Button
+                    key={quantity}
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    disabled={availableCount === 0}
+                    onClick={() => selectTopQuantity(quantity)}
+                  >
+                    <Zap className="size-4" />
+                    {quantity} numeros
+                  </Button>
+                ))}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={availableCount === 0}
+                  onClick={() => selectRandomQuantity(10)}
+                >
+                  <Shuffle className="size-4" />
+                  Surpresinha
+                </Button>
+              </div>
             </div>
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-[1.2fr_0.9fr_0.8fr_0.8fr_0.8fr]">
               <label className="grid gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-muted">

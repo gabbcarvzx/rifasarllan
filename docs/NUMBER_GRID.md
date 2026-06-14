@@ -64,7 +64,7 @@ Ele oferece:
 - paginacao local;
 - contador de resultados;
 - resumo de selecao;
-- CTA informativo/desabilitado para a proxima etapa.
+- CTA conectado ao fluxo real de reserva de numeros.
 
 O resumo fica em:
 

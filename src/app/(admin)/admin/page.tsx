@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowUpRight, Plus, Settings } from "lucide-react";
 import { getAdminDashboardStats } from "@/app/actions/dashboard";
+import { getAdminPlatformSettings } from "@/app/actions/platform-settings";
 import { AdminAlerts } from "@/components/admin/dashboard/admin-alerts";
 import { DashboardEmptyState } from "@/components/admin/dashboard/dashboard-empty-state";
 import { DashboardSummaryCards } from "@/components/admin/dashboard/dashboard-summary-cards";
@@ -11,6 +12,7 @@ import { RevenueOverview } from "@/components/admin/dashboard/revenue-overview";
 import { TopRaffles } from "@/components/admin/dashboard/top-raffles";
 import { UpcomingDraws } from "@/components/admin/dashboard/upcoming-draws";
 import { PageHeader } from "@/components/admin/page-header";
+import { AdminOnboardingChecklist } from "@/components/admin/onboarding/admin-onboarding-checklist";
 import { AuthMessage } from "@/components/auth/auth-message";
 import { buttonVariants } from "@/components/ui/button";
 
@@ -21,7 +23,10 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminDashboardPage() {
-  const result = await getAdminDashboardStats();
+  const [result, settings] = await Promise.all([
+    getAdminDashboardStats(),
+    getAdminPlatformSettings(),
+  ]);
   const stats = result.data;
   const operationalRaffles = stats
     ? stats.raffles.filter((raffle) =>
@@ -56,6 +61,8 @@ export default async function AdminDashboardPage() {
       />
 
       <AuthMessage error={result.error} />
+
+      <AdminOnboardingChecklist stats={stats} settings={settings} />
 
       {!stats || stats.summary.total_raffles === 0 ? (
         <DashboardEmptyState error={!stats} />

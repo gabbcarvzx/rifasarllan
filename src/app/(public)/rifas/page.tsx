@@ -30,8 +30,8 @@ export default async function RifasPage() {
               Escolha sua campanha
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-muted">
-              Apenas campanhas ativas aparecem nesta vitrine publica. Reservas,
-              grade visual e Pix entram em etapas dedicadas.
+              Explore campanhas ativas, confira os premios e reserve seus
+              numeros em uma experiencia organizada e transparente.
             </p>
           </div>
           <Link href="/" className={buttonVariants({ variant: "secondary" })}>
@@ -54,7 +54,7 @@ export default async function RifasPage() {
             <EmptyState
               icon={SearchX}
               title="Nenhuma rifa ativa no momento"
-              description="As campanhas publicadas pelo admin aparecerem aqui assim que o status estiver ativo."
+              description="As campanhas publicadas pelo administrador aparecerao aqui assim que estiverem ativas."
               action={
                 <Link
                   href="/"

@@ -1,12 +1,17 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  ChevronDown,
+  LayoutDashboard,
   LogOut,
   Menu,
+  ReceiptText,
   ShieldCheck,
   Ticket,
+  TicketCheck,
   UserCircle,
   UserPlus,
   X,
@@ -20,33 +25,45 @@ type HeaderClientProps = {
   isLoggedIn: boolean;
   isAdmin: boolean;
   displayName: string | null;
+  platformName: string;
+  logoUrl: string | null;
 };
 
 export function HeaderClient({
   isLoggedIn,
   isAdmin,
   displayName,
+  platformName,
+  logoUrl,
 }: HeaderClientProps) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
   const navigation = [
     { href: "/", label: "Inicio" },
     { href: "/rifas", label: "Rifas" },
-    ...(isAdmin ? [{ href: "/admin", label: "Admin" }] : []),
   ];
 
   return (
     <header className="sticky top-0 z-40 border-b border-white/10 bg-background/82 backdrop-blur-xl">
       <div className="mx-auto flex h-18 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link href="/" className="flex items-center gap-3" onClick={() => setOpen(false)}>
-          <span className="flex size-10 items-center justify-center rounded-lg border border-accent/30 bg-accent/15 text-accent">
-            <Ticket className="size-5" />
+          <span className="relative flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-accent/30 bg-accent/15 text-accent">
+            {logoUrl ? (
+              <Image
+                src={logoUrl}
+                alt={`Logo ${platformName}`}
+                fill
+                unoptimized
+                className="object-contain p-1"
+                sizes="40px"
+              />
+            ) : (
+              <Ticket className="size-5" />
+            )}
           </span>
-          <span className="leading-tight">
-            <span className="block text-sm font-semibold tracking-[0.22em] text-accent">
-              RIFA
-            </span>
-            <span className="block text-base font-bold text-foreground">Arllan</span>
+          <span className="max-w-40 truncate text-base font-bold text-foreground lg:max-w-56">
+            {platformName}
           </span>
         </Link>
 
@@ -67,28 +84,95 @@ export function HeaderClient({
 
         <div className="hidden items-center gap-3 md:flex">
           {isLoggedIn ? (
-            <>
-              <Link
-                href={isAdmin ? "/admin" : "/minha-conta"}
+            <div className="relative">
+              <button
+                type="button"
                 className={buttonVariants({ variant: "secondary", size: "sm" })}
+                aria-expanded={accountOpen}
+                aria-haspopup="menu"
+                onClick={() => setAccountOpen((current) => !current)}
               >
                 {isAdmin ? (
                   <ShieldCheck className="size-4" />
                 ) : (
                   <UserCircle className="size-4" />
                 )}
-                {isAdmin ? "Admin" : "Minha conta"}
-              </Link>
-              <form action={signOut}>
-                <button
-                  type="submit"
-                  className={buttonVariants({ variant: "ghost", size: "sm" })}
+                Minha conta
+                <ChevronDown className="size-4" />
+              </button>
+
+              {accountOpen ? (
+                <div
+                  className="absolute right-0 top-11 z-50 w-64 overflow-hidden rounded-lg border border-white/10 bg-surface-raised shadow-premium"
+                  role="menu"
                 >
-                  <LogOut className="size-4" />
-                  Sair
-                </button>
-              </form>
-            </>
+                  {displayName ? (
+                    <div className="border-b border-white/10 px-4 py-3">
+                      <p className="text-xs uppercase tracking-[0.14em] text-muted">
+                        Conectado como
+                      </p>
+                      <p className="mt-1 truncate text-sm font-semibold text-foreground">
+                        {displayName}
+                      </p>
+                    </div>
+                  ) : null}
+                  <div className="grid p-2">
+                    <Link
+                      href="/minha-conta"
+                      className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-foreground hover:bg-white/[0.06]"
+                      role="menuitem"
+                      onClick={() => setAccountOpen(false)}
+                    >
+                      <UserCircle className="size-4 text-primary" />
+                      Minha conta
+                    </Link>
+                    <Link
+                      href="/meus-pedidos"
+                      className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-foreground hover:bg-white/[0.06]"
+                      role="menuitem"
+                      onClick={() => setAccountOpen(false)}
+                    >
+                      <ReceiptText className="size-4 text-info" />
+                      Meus pedidos
+                    </Link>
+                    <Link
+                      href="/meus-numeros"
+                      className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-foreground hover:bg-white/[0.06]"
+                      role="menuitem"
+                      onClick={() => setAccountOpen(false)}
+                    >
+                      <TicketCheck className="size-4 text-accent" />
+                      Meus numeros
+                    </Link>
+                    {isAdmin ? (
+                      <Link
+                        href="/admin"
+                        className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-accent hover:bg-accent/10"
+                        role="menuitem"
+                        onClick={() => setAccountOpen(false)}
+                      >
+                        <LayoutDashboard className="size-4" />
+                        Painel admin
+                      </Link>
+                    ) : null}
+                  </div>
+                  <form action={signOut} className="border-t border-white/10 p-2">
+                    <button
+                      type="submit"
+                      className={buttonVariants({
+                        variant: "ghost",
+                        size: "sm",
+                        className: "w-full justify-start",
+                      })}
+                      role="menuitem"
+                    >
+                      <LogOut className="size-4" />
+                      Sair
+                    </button>
+                  </form>
+                </div>
+              ) : null}
+            </div>
           ) : (
             <>
               <Link
@@ -142,18 +226,52 @@ export function HeaderClient({
                 {item.label}
               </Link>
             ))}
+            {isLoggedIn ? (
+              <div className="grid gap-1 border-t border-white/10 pt-2">
+                <Link
+                  href="/minha-conta"
+                  className="rounded-lg px-3 py-3 text-sm font-semibold text-foreground hover:bg-white/[0.06]"
+                  onClick={() => setOpen(false)}
+                >
+                  Minha conta
+                </Link>
+                <Link
+                  href="/meus-pedidos"
+                  className="rounded-lg px-3 py-3 text-sm font-semibold text-foreground hover:bg-white/[0.06]"
+                  onClick={() => setOpen(false)}
+                >
+                  Meus pedidos
+                </Link>
+                <Link
+                  href="/meus-numeros"
+                  className="rounded-lg px-3 py-3 text-sm font-semibold text-foreground hover:bg-white/[0.06]"
+                  onClick={() => setOpen(false)}
+                >
+                  Meus numeros
+                </Link>
+                {isAdmin ? (
+                  <Link
+                    href="/admin"
+                    className="rounded-lg px-3 py-3 text-sm font-semibold text-accent hover:bg-accent/10"
+                    onClick={() => setOpen(false)}
+                  >
+                    Painel admin
+                  </Link>
+                ) : null}
+              </div>
+            ) : null}
             <div className="mt-2 grid grid-cols-2 gap-2">
               {isLoggedIn ? (
                 <>
                   <Link
-                    href={isAdmin ? "/admin" : "/minha-conta"}
+                    href="/minha-conta"
                     className={buttonVariants({
                       variant: "secondary",
                       size: "md",
                     })}
                     onClick={() => setOpen(false)}
                   >
-                    {isAdmin ? "Admin" : "Conta"}
+                    Conta
                   </Link>
                   <form action={signOut}>
                     <button

@@ -204,7 +204,7 @@ export function NumberGrid({
           </h2>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
             Selecione numeros disponiveis e crie uma reserva real por 15 minutos.
-            O pagamento Pix entra na proxima etapa.
+            O pagamento online permanece pausado; acompanhe o pedido pela sua conta.
           </p>
         </div>
         <div className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-4 lg:min-w-[420px]">

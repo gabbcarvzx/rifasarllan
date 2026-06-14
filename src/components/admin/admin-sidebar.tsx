@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -52,7 +53,13 @@ function AdminNavLinks({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
-export function AdminSidebar() {
+export function AdminSidebar({
+  platformName,
+  logoUrl,
+}: {
+  platformName: string;
+  logoUrl: string | null;
+}) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -60,10 +67,23 @@ export function AdminSidebar() {
       <div className="sticky top-0 z-40 border-b border-white/10 bg-background/90 px-4 py-3 backdrop-blur lg:hidden">
         <div className="flex items-center justify-between">
           <Link href="/admin" className="flex items-center gap-3">
-            <span className="flex size-9 items-center justify-center rounded-lg border border-accent/30 bg-accent/15 text-accent">
-              <Ticket className="size-4" />
+            <span className="relative flex size-9 items-center justify-center overflow-hidden rounded-lg border border-accent/30 bg-accent/15 text-accent">
+              {logoUrl ? (
+                <Image
+                  src={logoUrl}
+                  alt={`Logo ${platformName}`}
+                  fill
+                  unoptimized
+                  className="object-contain p-1"
+                  sizes="36px"
+                />
+              ) : (
+                <Ticket className="size-4" />
+              )}
             </span>
-            <span className="text-sm font-bold text-foreground">Admin Rifa</span>
+            <span className="max-w-48 truncate text-sm font-bold text-foreground">
+              {platformName}
+            </span>
           </Link>
           <button
             type="button"
@@ -95,12 +115,23 @@ export function AdminSidebar() {
 
       <aside className="fixed inset-y-0 left-0 hidden w-72 border-r border-white/10 bg-surface/92 p-5 backdrop-blur-xl lg:block">
         <Link href="/admin" className="flex items-center gap-3">
-          <span className="flex size-11 items-center justify-center rounded-lg border border-accent/30 bg-accent/15 text-accent">
-            <Ticket className="size-5" />
+          <span className="relative flex size-11 items-center justify-center overflow-hidden rounded-lg border border-accent/30 bg-accent/15 text-accent">
+            {logoUrl ? (
+              <Image
+                src={logoUrl}
+                alt={`Logo ${platformName}`}
+                fill
+                unoptimized
+                className="object-contain p-1"
+                sizes="44px"
+              />
+            ) : (
+              <Ticket className="size-5" />
+            )}
           </span>
           <span>
-            <span className="block text-xs font-semibold tracking-[0.22em] text-accent">
-              RIFA ARLLAN
+            <span className="block max-w-44 truncate text-xs font-semibold text-accent">
+              {platformName}
             </span>
             <span className="text-base font-bold text-foreground">
               Painel SaaS

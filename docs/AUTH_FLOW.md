@@ -98,7 +98,7 @@ profiles.role = 'admin'
 
 O sistema nunca confia apenas no frontend. A validacao acontece em:
 
-- `src/middleware.ts`, antes de acessar `/admin`.
+- `src/proxy.ts`, antes de acessar `/admin`.
 - `src/app/(admin)/admin/layout.tsx`, via `requireAdmin()`.
 - RLS do Supabase, pelas policies da Etapa 2.
 
@@ -123,12 +123,12 @@ returning id;
 
 Depois use o `id` retornado como `tenant_id` no profile admin.
 
-## Como o Middleware Protege `/admin`
+## Como o Proxy Protege `/admin`
 
 Arquivo:
 
 ```bash
-src/middleware.ts
+src/proxy.ts
 ```
 
 Regras:
@@ -137,9 +137,11 @@ Regras:
 - `/admin` e `/admin/*` exigem usuario autenticado.
 - Usuario sem sessao e redirecionado para `/login`.
 - Usuario autenticado sem `role = 'admin'` vai para `/acesso-negado`.
-- Admin autenticado acessa o painel.
+- Admin autenticado e vinculado a tenant ativo acessa o painel.
+- Tenant inativo e bloqueado antes de renderizar o admin.
 
-Observacao: Next.js 16 recomenda o novo arquivo `proxy.ts`, mas esta etapa manteve `src/middleware.ts` porque foi o contrato pedido. A protecao definitiva tambem fica no Server Component `AdminLayout`, entao nao dependemos apenas do middleware.
+A protecao definitiva tambem fica no Server Component `AdminLayout`, entao o
+sistema nao depende apenas do proxy.
 
 ## Helpers de Autorizacao
 
@@ -160,6 +162,7 @@ src/lib/auth/require-admin.ts
 
 - Chama `requireUser()`.
 - Verifica `profile.role === 'admin'`.
+- Exige `tenant_id` e tenant com status `active`.
 - Redireciona para `/acesso-negado` se nao for admin.
 
 ## Como Testar Localmente
@@ -199,5 +202,5 @@ npm run dev
 
 - Nenhuma service role e usada no frontend.
 - O projeto usa apenas `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_ANON_KEY` no client.
-- Rotas admin sao validadas no middleware e no Server Component.
+- Rotas admin sao validadas no proxy e no Server Component.
 - RLS continua sendo a camada final de isolamento de dados no Supabase.

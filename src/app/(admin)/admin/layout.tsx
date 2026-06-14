@@ -1,4 +1,5 @@
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
+import { getAdminPlatformSettings } from "@/app/actions/platform-settings";
 import { requireAdmin } from "@/lib/auth/require-admin";
 
 export const dynamic = "force-dynamic";
@@ -8,11 +9,17 @@ export default async function AdminLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  await requireAdmin();
+  const [, settings] = await Promise.all([
+    requireAdmin(),
+    getAdminPlatformSettings(),
+  ]);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <AdminSidebar />
+      <AdminSidebar
+        platformName={settings.platform_name}
+        logoUrl={settings.logo_url}
+      />
       <main className="lg:pl-72">
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
           {children}

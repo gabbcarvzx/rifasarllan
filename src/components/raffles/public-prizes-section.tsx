@@ -2,7 +2,8 @@ import Image from "next/image";
 import { Gift, PackageCheck, Trophy } from "lucide-react";
 import { ImagePlaceholder } from "@/components/media/image-placeholder";
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { cn } from "@/lib/utils";
 import type { RafflePrize } from "@/types/database";
 
 type PublicPrizesSectionProps = {
@@ -15,16 +16,23 @@ function formatPrizePosition(position: number) {
 
 export function PublicPrizesSection({ prizes }: PublicPrizesSectionProps) {
   if (prizes.length === 0) {
-    return null;
+    return (
+      <EmptyState
+        icon={Gift}
+        title="Premiacao em atualizacao"
+        description="O organizador ainda nao publicou os detalhes dos premios desta campanha. Confira novamente antes de reservar."
+        className="min-h-64"
+      />
+    );
   }
 
   return (
-    <Card className="p-5">
+    <section className="border-y border-white/10 py-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <Badge variant="default">Premios</Badge>
           <h2 className="mt-4 text-2xl font-bold tracking-tight text-foreground">
-            Premios desta rifa
+            Conheca a premiacao
           </h2>
           <p className="mt-2 text-sm leading-6 text-muted">
             Confira a ordem de premiacao, imagens e detalhes cadastrados pelo
@@ -41,9 +49,14 @@ export function PublicPrizesSection({ prizes }: PublicPrizesSectionProps) {
         {prizes.map((prize, index) => (
           <article
             key={prize.id}
-            className="overflow-hidden rounded-lg border border-white/10 bg-black/18"
+            className={cn(
+              "overflow-hidden rounded-lg border bg-black/18",
+              index === 0
+                ? "border-accent/30 md:col-span-2 md:grid md:grid-cols-[0.9fr_1.1fr]"
+                : "border-white/10",
+            )}
           >
-            <div className="relative aspect-[16/10] overflow-hidden bg-black/20">
+            <div className="relative aspect-[16/10] overflow-hidden bg-black/20 md:min-h-56">
               {prize.image_url ? (
                 <Image
                   src={prize.image_url}
@@ -89,6 +102,6 @@ export function PublicPrizesSection({ prizes }: PublicPrizesSectionProps) {
           </article>
         ))}
       </div>
-    </Card>
+    </section>
   );
 }

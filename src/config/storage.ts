@@ -89,6 +89,11 @@ export const UPLOAD_PURPOSE_CONFIG: Record<
     maxSizeBytes: 5 * BYTES_PER_MB,
     directory: "logos",
   },
+  favicon: {
+    bucket: StorageBucket.PlatformAssets,
+    maxSizeBytes: 2 * BYTES_PER_MB,
+    directory: "favicons",
+  },
   banner: {
     bucket: StorageBucket.PlatformAssets,
     maxSizeBytes: 10 * BYTES_PER_MB,

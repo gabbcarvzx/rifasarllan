@@ -32,8 +32,8 @@ Status: concluida.
 - Login, cadastro e logout reais.
 - Protecao server-side para rotas admin.
 - Controle de papeis por tenant.
-- Status de plano: trial, ativo, vencido e bloqueado.
-- Middleware para `/admin`.
+- Status operacional de tenant ativo ou inativo.
+- Proxy para `/admin` e rotas do participante.
 - Pagina `/minha-conta`.
 - Pagina `/acesso-negado`.
 - Documentacao criada em `docs/AUTH_FLOW.md`.
@@ -165,38 +165,82 @@ Status: pausados temporariamente.
 
 ## Etapa 11: Area do participante
 
+Status: concluida.
+
+- Perfil editavel com nome e WhatsApp.
+- Meus pedidos com status, valor, quantidade e prazo de reserva.
+- Meus numeros agrupados por rifa e filtrados por situacao.
+- Detalhe seguro de pedido proprio.
+- Consulta somente leitura de Pix existente, sem ativar pagamentos.
+- Middleware e Server Components protegendo todas as rotas da conta.
+- Historico preservado por `order_items`.
+- Documentacao criada em `docs/PARTICIPANT_AREA.md`.
+
+## Etapa 12: Configuracoes da plataforma (White Label)
+
+Status: concluida.
+
+- Configuracoes persistidas e isoladas por tenant.
+- Nome, slogan, suporte e texto de rodape editaveis.
+- Upload de logo, favicon e banner no bucket `platform-assets`.
+- Cores principal e secundaria aplicadas por tokens globais.
+- Redes sociais e WhatsApp no rodape.
+- SEO e favicon gerados no servidor.
+- Paginas publicas de termos e privacidade.
+- Vitrine publica alinhada ao tenant do branding.
+- Documentacao criada em `docs/PLATFORM_SETTINGS.md`.
+
+## Etapa 13: Resultado manual do sorteio ao vivo
+
+Status: concluida.
+
+- Sorteio mantido integralmente fora da plataforma.
+- Registro manual e auditavel de vencedores por tenant.
+- Validacao de rifa, premio e numero vencedor.
+- Alerta para numeros que nao constam como pagos.
+- Links da live e de comprovacao.
+- Publicacao e ocultacao controladas pelo admin.
+- Pagina publica de resultado sem exposicao de dados privados.
+- Documentacao criada em `docs/MANUAL_RESULTS.md`.
+
+## Etapa 14: Checklist de Producao e Comercializacao
+
+Status: concluida.
+
+- Checklist administrativo orientado por dados reais.
+- Pagina publica de rifa com CTA, confianca e compartilhamento.
+- Estados vazios, loading, 404 e erro polidos.
+- Headers de seguranca e `proxy.ts` para Next.js 16.
+- Hardening incremental de role, tenant e resultados publicos.
+- Runbook criado em `docs/PRODUCTION_CHECKLIST.md`.
+- Handoff comercial criado em `docs/CLIENT_HANDOFF.md`.
+
+## Etapa 15: Webhook Asaas
+
 Status: pendente.
 
-- Minhas reservas.
-- Meus pedidos.
-- Historico de participacao.
-- Status de pagamento e numeros.
+- Confirmacao automatica e idempotente de pagamentos.
+- Assinatura e validacao de eventos.
+- Reconciliacao de pedidos e numeros.
 
-## Etapa 12: Dashboard financeiro
-
-Status: pendente.
-
-- Receita por rifa.
-- Taxas, conversao e inadimplencia.
-- Filtros por periodo.
-- Exportacao futura.
-
-## Etapa 13: Sorteio
+## Etapa 16: WhatsApp automatico
 
 Status: pendente.
 
-- Regras de elegibilidade.
-- Registro de vencedor.
-- Auditoria do sorteio.
-- Pagina publica de resultado.
+- Mensagens transacionais de reserva e confirmacao.
+- Templates e consentimento operacional.
 
-## Etapa 14: Polimento final
+## Etapa 17: Relatorios avancados
 
 Status: pendente.
 
-- Testes automatizados.
-- Tratamento global de erro.
-- Logging estruturado.
-- Backup e restore.
-- Hardening de seguranca.
-- Deploy Vercel-ready.
+- Exportacoes e filtros por periodo.
+- Conversao, ocupacao e indicadores comerciais.
+
+## Etapa 18: Producao final com dominio
+
+Status: pendente.
+
+- Dominio definitivo e DNS.
+- Observabilidade, backup e rotina de suporte.
+- Go-live assistido com checklist de aceite.

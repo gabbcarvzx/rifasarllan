@@ -12,6 +12,7 @@ export type StorageBucketName = `${StorageBucket}`;
 
 export type UploadPurpose =
   | "logo"
+  | "favicon"
   | "banner"
   | "raffle-image"
   | "prize-image"

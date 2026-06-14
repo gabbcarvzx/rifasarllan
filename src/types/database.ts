@@ -71,10 +71,22 @@ export type PlatformSettings = {
   id: string;
   tenant_id: string;
   platform_name: string;
+  platform_subtitle: string | null;
   logo_url: string | null;
+  favicon_url: string | null;
+  hero_banner_url: string | null;
   primary_color: string | null;
+  secondary_color: string | null;
   whatsapp_number: string | null;
   instagram_url: string | null;
+  facebook_url: string | null;
+  youtube_url: string | null;
+  support_email: string | null;
+  footer_text: string | null;
+  privacy_policy: string | null;
+  terms_of_use: string | null;
+  seo_title: string | null;
+  seo_description: string | null;
   hero_title: string | null;
   hero_subtitle: string | null;
   created_at: ISODateTime;
@@ -222,7 +234,37 @@ export type Winner = {
   winner_name: string | null;
   winner_phone: string | null;
   drawn_at: ISODateTime;
+  draw_source: string | null;
+  instagram_live_url: string | null;
+  proof_url: string | null;
+  notes: string | null;
+  published: boolean;
+  published_at: ISODateTime | null;
+  created_by: string | null;
   created_at: ISODateTime;
+  updated_at: ISODateTime;
+};
+
+export type PublicResultRaffleRow = Pick<
+  Raffle,
+  "id" | "title" | "slug" | "main_image_url" | "status" | "draw_date"
+>;
+
+export type PublicManualResultRow = {
+  winner_id: string;
+  raffle_id: string;
+  prize_id: string | null;
+  prize_title: string;
+  prize_description: string | null;
+  prize_image_url: string | null;
+  prize_position: number;
+  number: number;
+  winner_name: string;
+  drawn_at: ISODateTime;
+  draw_source: string;
+  instagram_live_url: string | null;
+  proof_url: string | null;
+  published_at: ISODateTime;
 };
 
 export type MediaFile = {
@@ -268,10 +310,22 @@ export type Database = {
             Pick<
               PlatformSettings,
               | "id"
+              | "platform_subtitle"
               | "logo_url"
+              | "favicon_url"
+              | "hero_banner_url"
               | "primary_color"
+              | "secondary_color"
               | "whatsapp_number"
               | "instagram_url"
+              | "facebook_url"
+              | "youtube_url"
+              | "support_email"
+              | "footer_text"
+              | "privacy_policy"
+              | "terms_of_use"
+              | "seo_title"
+              | "seo_description"
               | "hero_title"
               | "hero_subtitle"
             >
@@ -419,7 +473,20 @@ export type Database = {
           Partial<
             Pick<
               Winner,
-              "id" | "prize_id" | "user_id" | "order_id" | "winner_name" | "winner_phone" | "drawn_at"
+              | "id"
+              | "prize_id"
+              | "user_id"
+              | "order_id"
+              | "winner_name"
+              | "winner_phone"
+              | "drawn_at"
+              | "draw_source"
+              | "instagram_live_url"
+              | "proof_url"
+              | "notes"
+              | "published"
+              | "published_at"
+              | "created_by"
             >
           >;
         Update: Partial<Omit<Winner, "id" | "tenant_id" | "created_at">>;
@@ -494,6 +561,14 @@ export type Database = {
       get_admin_dashboard_stats: {
         Args: { p_tenant_id: string };
         Returns: Json;
+      };
+      get_public_result_raffle: {
+        Args: { p_slug: string; p_tenant_id: string };
+        Returns: PublicResultRaffleRow[];
+      };
+      get_public_manual_results: {
+        Args: { p_raffle_id: string; p_tenant_id: string };
+        Returns: PublicManualResultRow[];
       };
       sync_asaas_payment: {
         Args: {

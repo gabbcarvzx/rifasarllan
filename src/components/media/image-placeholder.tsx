@@ -9,7 +9,7 @@ type ImagePlaceholderProps = {
 
 export function ImagePlaceholder({
   title = "Imagem ainda nao enviada",
-  description = "O asset sera conectado ao Supabase Storage nas proximas etapas.",
+  description = "O administrador ainda nao publicou uma imagem para este item.",
   className,
 }: ImagePlaceholderProps) {
   return (

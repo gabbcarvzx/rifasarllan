@@ -48,8 +48,8 @@ export function NumberStatsPreview({ stats }: NumberStatsPreviewProps) {
             Preview estatistico dos numeros
           </h2>
           <p className="mt-1 text-sm leading-6 text-muted">
-            Leitura operacional da grade atual. Gerenciamento manual de numeros
-            fica para etapas futuras.
+            Leitura operacional da grade atual para acompanhar disponibilidade,
+            reservas, confirmacoes e cancelamentos.
           </p>
         </div>
         {stats.error ? (

@@ -1,32 +1,15 @@
 import { isSupabaseConfigured } from "@/lib/env";
+import { getPublicTenantId } from "@/lib/platform-settings/public";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { Raffle } from "@/types/database";
-
-async function getActiveTenantIds() {
-  if (!isSupabaseConfigured()) {
-    return [];
-  }
-
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
-    .from("tenants")
-    .select("id")
-    .eq("status", "active");
-
-  if (error) {
-    return [];
-  }
-
-  return data.map((tenant) => tenant.id);
-}
 
 export async function getPublicActiveRaffles(options?: {
   featuredOnly?: boolean;
   limit?: number;
 }): Promise<Raffle[]> {
-  const tenantIds = await getActiveTenantIds();
+  const tenantId = await getPublicTenantId();
 
-  if (tenantIds.length === 0) {
+  if (!tenantId || !isSupabaseConfigured()) {
     return [];
   }
 
@@ -35,7 +18,7 @@ export async function getPublicActiveRaffles(options?: {
     .from("raffles")
     .select("*")
     .eq("status", "active")
-    .in("tenant_id", tenantIds)
+    .eq("tenant_id", tenantId)
     .order("featured", { ascending: false })
     .order("draw_date", { ascending: true, nullsFirst: false })
     .order("created_at", { ascending: false });
@@ -58,9 +41,9 @@ export async function getPublicActiveRaffles(options?: {
 }
 
 export async function getPublicRaffleBySlug(slug: string): Promise<Raffle | null> {
-  const tenantIds = await getActiveTenantIds();
+  const tenantId = await getPublicTenantId();
 
-  if (tenantIds.length === 0) {
+  if (!tenantId || !isSupabaseConfigured()) {
     return null;
   }
 
@@ -70,7 +53,7 @@ export async function getPublicRaffleBySlug(slug: string): Promise<Raffle | null
     .select("*")
     .eq("slug", slug)
     .eq("status", "active")
-    .in("tenant_id", tenantIds)
+    .eq("tenant_id", tenantId)
     .order("featured", { ascending: false })
     .order("created_at", { ascending: false })
     .limit(1)

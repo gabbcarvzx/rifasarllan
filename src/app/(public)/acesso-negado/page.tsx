@@ -8,7 +8,16 @@ export const metadata: Metadata = {
   title: "Acesso Negado",
 };
 
-export default function AcessoNegadoPage() {
+type AcessoNegadoPageProps = {
+  searchParams: Promise<{ reason?: string }>;
+};
+
+export default async function AcessoNegadoPage({
+  searchParams,
+}: AcessoNegadoPageProps) {
+  const { reason } = await searchParams;
+  const tenantInactive = reason === "tenant-inativo";
+
   return (
     <section className="bg-surface/30 px-4 py-16 sm:px-6 lg:px-8">
       <Card className="mx-auto max-w-2xl p-8 text-center">
@@ -19,11 +28,14 @@ export default function AcessoNegadoPage() {
           Acesso negado
         </p>
         <h1 className="mt-3 text-3xl font-bold tracking-tight text-foreground">
-          Esta area exige permissao de admin
+          {tenantInactive
+            ? "Este tenant esta temporariamente inativo"
+            : "Esta area exige permissao de admin"}
         </h1>
         <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-muted">
-          Sua sessao esta ativa, mas seu profile nao possui role admin para
-          acessar o painel administrativo deste tenant.
+          {tenantInactive
+            ? "Sua sessao esta ativa, mas a operacao administrativa foi bloqueada. Solicite a reativacao do tenant ao responsavel pela plataforma."
+            : "Sua sessao esta ativa, mas seu perfil nao possui permissao administrativa para acessar este tenant."}
         </p>
         <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
           <Link href="/rifas" className={buttonVariants({ variant: "primary" })}>

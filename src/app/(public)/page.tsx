@@ -16,6 +16,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getPublicActiveRaffles } from "@/lib/raffles/public-queries";
+import { getPublicPlatformSettings } from "@/lib/platform-settings/public";
 
 export const dynamic = "force-dynamic";
 
@@ -45,7 +46,10 @@ const steps = [
 ];
 
 export default async function HomePage() {
-  const raffles = await getPublicActiveRaffles({ limit: 3 });
+  const [raffles, settings] = await Promise.all([
+    getPublicActiveRaffles({ limit: 3 }),
+    getPublicPlatformSettings(),
+  ]);
   const prizeSummaries = await getPublicPrizeSummaries(
     raffles.map((raffle) => raffle.id),
   );
@@ -54,25 +58,36 @@ export default async function HomePage() {
     <>
       <section className="relative isolate flex min-h-[82svh] items-center overflow-hidden border-b border-white/10">
         <Image
-          src="/images/hero-raffle-premium.png"
-          alt="Interface premium de rifa online com premios"
+          src={settings.hero_banner_url ?? "/images/hero-raffle-premium.png"}
+          alt={`Banner principal de ${settings.platform_name}`}
           fill
           priority
           className="object-cover object-center opacity-70"
           sizes="100vw"
         />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_72%_38%,rgba(34,197,94,0.24),transparent_28%),linear-gradient(90deg,rgba(6,8,8,0.98)_0%,rgba(6,8,8,0.84)_42%,rgba(6,8,8,0.34)_100%)]" />
+        <div className="absolute inset-0 bg-black/68" />
         <div className="premium-grid absolute inset-0 opacity-30" />
 
         <div className="relative mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
           <div className="max-w-3xl">
             <Badge variant="success">Rifas online premium</Badge>
+            {settings.logo_url ? (
+              <div className="relative mt-6 size-20 overflow-hidden rounded-lg border border-white/15 bg-black/30 p-2 backdrop-blur">
+                <Image
+                  src={settings.logo_url}
+                  alt={`Logo ${settings.platform_name}`}
+                  fill
+                  unoptimized
+                  className="object-contain p-2"
+                  sizes="80px"
+                />
+              </div>
+            ) : null}
             <h1 className="mt-6 max-w-3xl text-balance text-5xl font-black tracking-tight text-foreground sm:text-6xl lg:text-7xl">
-              Rifa Arllan
+              {settings.platform_name}
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-muted sm:text-xl">
-              Uma experiencia de sorteios online com visual de produto SaaS,
-              estrutura profissional e base preparada para operacao comercial.
+              {settings.platform_subtitle}
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
@@ -95,9 +110,9 @@ export default async function HomePage() {
             </div>
             <div className="mt-10 grid max-w-xl grid-cols-3 gap-3">
               {[
-                ["RLS", "tenant safe"],
-                ["Auth", "Supabase"],
-                ["Pix", "roadmap"],
+                ["RLS", "dados seguros"],
+                ["Auth", "conta protegida"],
+                ["24h", "acesso online"],
               ].map(([value, label]) => (
                 <div
                   key={label}

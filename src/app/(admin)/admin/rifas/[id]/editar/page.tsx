@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Eye } from "lucide-react";
+import { ArrowLeft, Eye, Trophy } from "lucide-react";
+import { getAdminManualResults } from "@/app/actions/manual-results";
 import { getAdminRaffleNumberStats } from "@/app/actions/raffle-numbers";
 import { getRafflePrizes } from "@/app/actions/prizes";
 import { getAdminRaffleImages } from "@/app/actions/raffle-media";
 import { getAdminRaffleById, updateRaffle } from "@/app/actions/raffles";
 import { PageHeader } from "@/components/admin/page-header";
 import { PrizeList } from "@/components/admin/prizes/prize-list";
+import { ManualResultPanel } from "@/components/admin/results/manual-result-panel";
 import { NumberStatsPreview } from "@/components/admin/raffles/number-stats-preview";
 import { RaffleActions } from "@/components/admin/raffles/raffle-actions";
 import { RaffleForm } from "@/components/admin/raffles/raffle-form";
@@ -42,10 +44,11 @@ export default async function EditarRifaPage({
   }
 
   const raffle = result.data;
-  const [galleryResult, prizeResult, numberStats] = await Promise.all([
+  const [galleryResult, prizeResult, numberStats, manualResults] = await Promise.all([
     getAdminRaffleImages(raffle.id),
     getRafflePrizes(raffle.id),
     getAdminRaffleNumberStats(raffle.id),
+    getAdminManualResults(raffle.id),
   ]);
 
   return (
@@ -62,6 +65,13 @@ export default async function EditarRifaPage({
             >
               <ArrowLeft className="size-4" />
               Voltar
+            </Link>
+            <Link
+              href={`/admin/rifas/${raffle.id}/resultado`}
+              className={buttonVariants({ variant: "outline" })}
+            >
+              <Trophy className="size-4" />
+              Resultado
             </Link>
             {raffle.status === "active" ? (
               <Link
@@ -90,13 +100,15 @@ export default async function EditarRifaPage({
           result.error ||
           galleryResult.error ||
           prizeResult.error ||
-          numberStats.error
+          numberStats.error ||
+          manualResults.error
         }
         success={success}
       />
       <NumberStatsPreview stats={numberStats} />
       <RaffleMediaManager raffle={raffle} galleryImages={galleryResult.data} />
       <PrizeList raffle={raffle} prizes={prizeResult.data} />
+      {manualResults.data ? <ManualResultPanel data={manualResults.data} /> : null}
       <RaffleForm
         action={updateRaffle}
         cancelHref="/admin/rifas"

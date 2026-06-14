@@ -67,8 +67,8 @@ export function SelectionSummary({
             Resumo da selecao
           </div>
           <p className="mt-1 text-xs leading-5 text-muted">
-            A reserva bloqueia os numeros por 15 minutos. Pagamento Pix entra na
-            proxima etapa.
+            A reserva bloqueia os numeros por 15 minutos e cria um pedido na sua
+            conta. O pagamento online permanece pausado.
           </p>
         </div>
         <span className="rounded-full border border-primary/25 bg-primary/12 px-3 py-1 text-xs font-semibold text-emerald-100">

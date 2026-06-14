@@ -104,7 +104,7 @@ export function PublicRaffleCard({
           href={`/rifas/${raffle.slug}`}
           className={buttonVariants({ className: "w-full", size: "lg" })}
         >
-          Ver rifa
+          Escolher numeros
         </Link>
       </div>
     </Card>

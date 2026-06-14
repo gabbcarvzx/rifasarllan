@@ -10,7 +10,6 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import {
   addRandomAvailableNumbers,
-  addTopAvailableNumbers,
 } from "@/lib/raffles/quick-selection";
 import { cn } from "@/lib/utils";
 import type {
@@ -63,6 +62,7 @@ const statusOptions: Array<{ value: NumberGridStatus; label: string }> = [
 
 const pageSizeOptions = [250, 500, 1000] as const;
 const quickPickOptions = [5, 10, 20] as const;
+const maxNumbersPerReservation = 100;
 
 function parseOptionalNumber(value: string) {
   const parsed = Number.parseInt(value, 10);
@@ -100,6 +100,7 @@ export function NumberGrid({
   const [search, setSearch] = useState("");
   const [fromNumber, setFromNumber] = useState("");
   const [toNumber, setToNumber] = useState("");
+  const [surpriseQuantity, setSurpriseQuantity] = useState("10");
   const [pageSize, setPageSize] =
     useState<(typeof pageSizeOptions)[number]>(250);
   const [page, setPage] = useState(1);
@@ -127,6 +128,12 @@ export function NumberGrid({
         .sort((first, second) => first - second),
     [availableNumbers, selectedNumbers],
   );
+  const quickPickLimit = Math.min(maxNumbersPerReservation, availableCount);
+  const parsedSurpriseQuantity = parseOptionalNumber(surpriseQuantity);
+  const customSurpriseQuantity =
+    parsedSurpriseQuantity === null
+      ? null
+      : Math.min(Math.max(parsedSurpriseQuantity, 1), quickPickLimit);
   const selectedLookup = selectedNumbers;
   const filteredNumbers = useMemo(() => {
     const normalizedSearch = deferredSearch.trim();
@@ -205,22 +212,14 @@ export function NumberGrid({
     setSelectedNumbers(new Set());
   }
 
-  function selectTopQuantity(quantity: number) {
-    setSelectedNumbers((current) =>
-      addTopAvailableNumbers({
-        numbers,
-        selectedNumbers: current,
-        quantity,
-      }),
-    );
-  }
-
   function selectRandomQuantity(quantity: number) {
+    const targetQuantity = Math.min(Math.max(quantity, 1), quickPickLimit);
+
     setSelectedNumbers((current) =>
       addRandomAvailableNumbers({
         numbers,
         selectedNumbers: current,
-        quantity,
+        quantity: targetQuantity,
       }),
     );
   }
@@ -304,20 +303,35 @@ export function NumberGrid({
                     variant="secondary"
                     size="sm"
                     disabled={availableCount === 0}
-                    onClick={() => selectTopQuantity(quantity)}
+                    onClick={() => selectRandomQuantity(quantity)}
                   >
-                    <Zap className="size-4" />
-                    {quantity} numeros
+                    <Shuffle className="size-4" />
+                    {quantity}
                   </Button>
                 ))}
+                <label className="flex min-w-32 items-center gap-2 rounded-md border border-white/10 bg-white/[0.04] px-2 py-1 text-xs font-semibold text-muted">
+                  Qtd.
+                  <Input
+                    value={surpriseQuantity}
+                    onChange={(event) => setSurpriseQuantity(event.target.value)}
+                    inputMode="numeric"
+                    min={1}
+                    max={quickPickLimit}
+                    className="h-8 w-16 px-2 text-center"
+                  />
+                </label>
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
-                  disabled={availableCount === 0}
-                  onClick={() => selectRandomQuantity(10)}
+                  disabled={availableCount === 0 || customSurpriseQuantity === null}
+                  onClick={() => {
+                    if (customSurpriseQuantity !== null) {
+                      selectRandomQuantity(customSurpriseQuantity);
+                    }
+                  }}
                 >
-                  <Shuffle className="size-4" />
+                  <Zap className="size-4" />
                   Surpresinha
                 </Button>
               </div>

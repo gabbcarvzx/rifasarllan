@@ -20,22 +20,6 @@ export function getAvailableNumberValues(numbers: RaffleNumberLike[]) {
     .sort((first, second) => first - second);
 }
 
-export function addTopAvailableNumbers({
-  numbers,
-  selectedNumbers,
-  quantity,
-}: QuickSelectionInput) {
-  const next = new Set(selectedNumbers);
-  const available = getAvailableNumberValues(numbers);
-
-  for (const number of available) {
-    if (next.size >= quantity) break;
-    next.add(number);
-  }
-
-  return next;
-}
-
 export function addRandomAvailableNumbers({
   numbers,
   selectedNumbers,

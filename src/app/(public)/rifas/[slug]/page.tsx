@@ -13,7 +13,10 @@ import {
   UserCheck,
 } from "lucide-react";
 import { getPublicManualResultsForRaffle } from "@/app/actions/manual-results";
-import { getPublicRaffleNumbers } from "@/app/actions/raffle-numbers";
+import {
+  getPublicRaffleNumberPage,
+  getPublicRaffleNumberStats,
+} from "@/app/actions/raffle-numbers";
 import { getPublicRafflePrizes } from "@/app/actions/prizes";
 import { getPublicRaffleImages } from "@/app/actions/raffle-media";
 import { RaffleStatusBadge } from "@/components/admin/raffles/raffle-status-badge";
@@ -82,14 +85,16 @@ export default async function RifaDetalhePage({ params }: RifaPageProps) {
   const [
     galleryImages,
     prizes,
-    raffleNumbers,
+    raffleNumbersPage,
+    raffleNumberStats,
     authContext,
     settings,
     result,
   ] = await Promise.all([
     getPublicRaffleImages(raffle.id),
     getPublicRafflePrizes(raffle.id),
-    getPublicRaffleNumbers(raffle.id),
+    getPublicRaffleNumberPage({ raffleId: raffle.id }),
+    getPublicRaffleNumberStats(raffle.id),
     authContextPromise,
     getPublicPlatformSettings(),
     getPublicManualResultsForRaffle({
@@ -313,7 +318,8 @@ export default async function RifaDetalhePage({ params }: RifaPageProps) {
           <NumberGrid
             raffleId={raffle.id}
             raffleSlug={raffle.slug}
-            numbers={raffleNumbers}
+            initialPage={raffleNumbersPage}
+            stats={raffleNumberStats}
             pricePerNumber={raffle.price_per_number}
             minNumber={raffle.min_number}
             maxNumber={raffle.max_number}

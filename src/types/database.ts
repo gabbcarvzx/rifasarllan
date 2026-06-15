@@ -570,6 +570,14 @@ export type Database = {
         Args: { p_raffle_id: string; p_tenant_id: string };
         Returns: PublicManualResultRow[];
       };
+      get_random_available_raffle_numbers: {
+        Args: {
+          p_raffle_id: string;
+          p_quantity: number;
+          p_excluded_numbers?: number[];
+        };
+        Returns: number[];
+      };
       sync_asaas_payment: {
         Args: {
           p_payment_id: string;

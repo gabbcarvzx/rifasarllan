@@ -1,7 +1,12 @@
 "use client";
 
-import { useDeferredValue, useMemo, useState } from "react";
-import { Check, Filter, Search, Shuffle, Ticket, X, Zap } from "lucide-react";
+import { useState, useTransition } from "react";
+import { Check, Filter, Loader2, Search, Shuffle, Ticket, X, Zap } from "lucide-react";
+import {
+  getPublicRaffleNumberPage,
+  getPublicRandomAvailableNumbers,
+  type RaffleNumberStats,
+} from "@/app/actions/raffle-numbers";
 import { SelectionSummary } from "@/components/raffles/selection-summary";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,8 +14,10 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import {
-  addRandomAvailableNumbers,
-} from "@/lib/raffles/quick-selection";
+  defaultRaffleNumberPageSize,
+  raffleNumberPageSizeOptions,
+  type RaffleNumberPage,
+} from "@/lib/raffles/number-pagination";
 import { cn } from "@/lib/utils";
 import type {
   NumberGridStatus,
@@ -21,7 +28,8 @@ import type {
 type NumberGridProps = {
   raffleId: string;
   raffleSlug: string;
-  numbers: RaffleNumberPublic[];
+  initialPage: RaffleNumberPage;
+  stats: RaffleNumberStats;
   pricePerNumber: number;
   minNumber: number;
   maxNumber: number;
@@ -51,16 +59,17 @@ const statusStyles: Record<RaffleNumberStatus | "selected", string> = {
     "cursor-not-allowed border-white/10 bg-white/[0.04] text-muted opacity-60",
 };
 
-const statusOptions: Array<{ value: NumberGridStatus; label: string }> = [
+const statusOptions: Array<{
+  value: Exclude<NumberGridStatus, "selected">;
+  label: string;
+}> = [
   { value: "all", label: "Todos" },
   { value: "available", label: "Disponiveis" },
-  { value: "selected", label: "Selecionados" },
   { value: "reserved", label: "Reservados" },
   { value: "paid", label: "Vendidos" },
   { value: "cancelled", label: "Cancelados" },
 ];
 
-const pageSizeOptions = [250, 500, 1000] as const;
 const quickPickOptions = [5, 10, 20] as const;
 const maxNumbersPerReservation = 100;
 
@@ -69,25 +78,20 @@ function parseOptionalNumber(value: string) {
   return Number.isInteger(parsed) ? parsed : null;
 }
 
-function countByStatus(numbers: RaffleNumberPublic[]) {
-  return numbers.reduce<Record<RaffleNumberStatus, number>>(
-    (acc, item) => {
-      acc[item.status] += 1;
-      return acc;
-    },
-    {
-      available: 0,
-      reserved: 0,
-      paid: 0,
-      cancelled: 0,
-    },
-  );
+function getNumberStatus(
+  item: RaffleNumberPublic,
+  selectedNumbers: Set<number>,
+) {
+  return item.status === "available" && selectedNumbers.has(item.number)
+    ? "selected"
+    : item.status;
 }
 
 export function NumberGrid({
   raffleId,
   raffleSlug,
-  numbers,
+  initialPage,
+  stats,
   pricePerNumber,
   minNumber,
   maxNumber,
@@ -96,98 +100,72 @@ export function NumberGrid({
   const [selectedNumbers, setSelectedNumbers] = useState<Set<number>>(
     () => new Set(),
   );
-  const [statusFilter, setStatusFilter] = useState<NumberGridStatus>("all");
+  const [pageData, setPageData] = useState(initialPage);
+  const [statusFilter, setStatusFilter] =
+    useState<Exclude<NumberGridStatus, "selected">>("all");
   const [search, setSearch] = useState("");
   const [fromNumber, setFromNumber] = useState("");
   const [toNumber, setToNumber] = useState("");
   const [surpriseQuantity, setSurpriseQuantity] = useState("10");
-  const [pageSize, setPageSize] =
-    useState<(typeof pageSizeOptions)[number]>(250);
-  const [page, setPage] = useState(1);
-  const deferredSearch = useDeferredValue(search);
-  const deferredFromNumber = useDeferredValue(fromNumber);
-  const deferredToNumber = useDeferredValue(toNumber);
-  const stats = useMemo(() => countByStatus(numbers), [numbers]);
+  const [pageSize, setPageSize] = useState(defaultRaffleNumberPageSize);
+  const [isLoadingPage, startPageTransition] = useTransition();
+  const [isPickingRandom, startRandomTransition] = useTransition();
   const occupiedCount = stats.reserved + stats.paid;
   const occupancyPercentage =
-    numbers.length > 0 ? Math.min(100, (occupiedCount / numbers.length) * 100) : 0;
-  const availableCount = stats.available;
-  const availableNumbers = useMemo(
-    () =>
-      new Set(
-        numbers
-          .filter((item) => item.status === "available")
-          .map((item) => item.number),
-    ),
-    [numbers],
+    stats.total > 0 ? Math.min(100, (occupiedCount / stats.total) * 100) : 0;
+  const selectedList = Array.from(selectedNumbers).sort(
+    (first, second) => first - second,
   );
-  const selectedList = useMemo(
-    () =>
-      Array.from(selectedNumbers)
-        .filter((number) => availableNumbers.has(number))
-        .sort((first, second) => first - second),
-    [availableNumbers, selectedNumbers],
-  );
-  const quickPickLimit = Math.min(maxNumbersPerReservation, availableCount);
+  const quickPickLimit = Math.min(maxNumbersPerReservation, stats.available);
   const parsedSurpriseQuantity = parseOptionalNumber(surpriseQuantity);
   const customSurpriseQuantity =
     parsedSurpriseQuantity === null
       ? null
       : Math.min(Math.max(parsedSurpriseQuantity, 1), quickPickLimit);
-  const selectedLookup = selectedNumbers;
-  const filteredNumbers = useMemo(() => {
-    const normalizedSearch = deferredSearch.trim();
-    const intervalStart = parseOptionalNumber(deferredFromNumber);
-    const intervalEnd = parseOptionalNumber(deferredToNumber);
 
-    return numbers.filter((item) => {
-      const selected =
-        item.status === "available" && selectedLookup.has(item.number);
+  function loadPage(overrides: {
+    page?: number;
+    pageSize?: number;
+    status?: Exclude<NumberGridStatus, "selected">;
+    search?: string;
+    fromNumber?: string;
+    toNumber?: string;
+  } = {}) {
+    const nextPageSize = overrides.pageSize ?? pageSize;
+    const nextStatus = overrides.status ?? statusFilter;
+    const nextSearch = overrides.search ?? search;
+    const nextFromNumber = overrides.fromNumber ?? fromNumber;
+    const nextToNumber = overrides.toNumber ?? toNumber;
 
-      if (statusFilter === "selected" && !selected) {
-        return false;
-      }
-
-      if (
-        statusFilter !== "all" &&
-        statusFilter !== "selected" &&
-        item.status !== statusFilter
-      ) {
-        return false;
-      }
-
-      if (
-        normalizedSearch &&
-        !String(item.number).includes(normalizedSearch)
-      ) {
-        return false;
-      }
-
-      if (intervalStart !== null && item.number < intervalStart) {
-        return false;
-      }
-
-      if (intervalEnd !== null && item.number > intervalEnd) {
-        return false;
-      }
-
-      return true;
+    startPageTransition(() => {
+      void getPublicRaffleNumberPage({
+        raffleId,
+        page: overrides.page ?? pageData.page,
+        pageSize: nextPageSize,
+        status: nextStatus,
+        search: nextSearch,
+        fromNumber: parseOptionalNumber(nextFromNumber),
+        toNumber: parseOptionalNumber(nextToNumber),
+      }).then(setPageData);
     });
-  }, [
-    deferredFromNumber,
-    deferredSearch,
-    deferredToNumber,
-    numbers,
-    selectedLookup,
-    statusFilter,
-  ]);
-  const totalPages = Math.max(Math.ceil(filteredNumbers.length / pageSize), 1);
-  const currentPage = Math.min(page, totalPages);
-  const startIndex = (currentPage - 1) * pageSize;
-  const visibleNumbers = filteredNumbers.slice(startIndex, startIndex + pageSize);
+  }
 
-  function resetPage() {
-    setPage(1);
+  function applyFilters() {
+    loadPage({ page: 1 });
+  }
+
+  function resetFilters() {
+    setStatusFilter("all");
+    setSearch("");
+    setFromNumber("");
+    setToNumber("");
+    loadPage({
+      page: 1,
+      status: "all",
+      search: "",
+      fromNumber: "",
+      toNumber: "",
+    });
   }
 
   function toggleNumber(item: RaffleNumberPublic) {
@@ -200,7 +178,7 @@ export function NumberGrid({
 
       if (next.has(item.number)) {
         next.delete(item.number);
-      } else {
+      } else if (next.size < maxNumbersPerReservation) {
         next.add(item.number);
       }
 
@@ -215,21 +193,27 @@ export function NumberGrid({
   function selectRandomQuantity(quantity: number) {
     const targetQuantity = Math.min(Math.max(quantity, 1), quickPickLimit);
 
-    setSelectedNumbers((current) =>
-      addRandomAvailableNumbers({
-        numbers,
-        selectedNumbers: current,
+    startRandomTransition(() => {
+      void getPublicRandomAvailableNumbers({
+        raffleId,
         quantity: targetQuantity,
-      }),
-    );
-  }
+        excludedNumbers: selectedList,
+      }).then((numbers) => {
+        setSelectedNumbers((current) => {
+          const next = new Set(current);
 
-  function clearFilters() {
-    setStatusFilter("all");
-    setSearch("");
-    setFromNumber("");
-    setToNumber("");
-    setPage(1);
+          for (const number of numbers) {
+            if (next.size >= maxNumbersPerReservation) {
+              break;
+            }
+
+            next.add(number);
+          }
+
+          return next;
+        });
+      });
+    });
   }
 
   return (
@@ -241,21 +225,19 @@ export function NumberGrid({
             Grade visual da rifa
           </h2>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
-            Selecione numeros disponiveis e crie uma reserva real por 15 minutos.
-            O pagamento online permanece pausado; acompanhe o pedido pela sua conta.
+            Selecione numeros disponiveis, use filtros por pagina e crie uma
+            reserva real por 15 minutos.
           </p>
         </div>
         <div className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-4 lg:min-w-[420px]">
-          {Object.entries(stats).map(([status, total]) => (
+          {Object.entries(statusLabels).map(([status, label]) => (
             <div
               key={status}
               className="rounded-lg border border-white/10 bg-black/18 p-3"
             >
-              <p className="text-muted">
-                {statusLabels[status as RaffleNumberStatus]}
-              </p>
+              <p className="text-muted">{label}</p>
               <p className="mt-1 text-lg font-bold text-foreground">
-                {total.toLocaleString("pt-BR")}
+                {stats[status as RaffleNumberStatus].toLocaleString("pt-BR")}
               </p>
             </div>
           ))}
@@ -266,7 +248,7 @@ export function NumberGrid({
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-sm font-semibold text-foreground">
-              {availableCount.toLocaleString("pt-BR")} numeros disponiveis
+              {stats.available.toLocaleString("pt-BR")} numeros disponiveis
             </p>
             <p className="mt-1 text-xs leading-5 text-muted">
               {occupiedCount.toLocaleString("pt-BR")} ja estao reservados ou vendidos.
@@ -302,10 +284,14 @@ export function NumberGrid({
                     type="button"
                     variant="secondary"
                     size="sm"
-                    disabled={availableCount === 0}
+                    disabled={quickPickLimit === 0 || isPickingRandom}
                     onClick={() => selectRandomQuantity(quantity)}
                   >
-                    <Shuffle className="size-4" />
+                    {isPickingRandom ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : (
+                      <Shuffle className="size-4" />
+                    )}
                     {quantity}
                   </Button>
                 ))}
@@ -324,14 +310,22 @@ export function NumberGrid({
                   type="button"
                   variant="outline"
                   size="sm"
-                  disabled={availableCount === 0 || customSurpriseQuantity === null}
+                  disabled={
+                    quickPickLimit === 0 ||
+                    customSurpriseQuantity === null ||
+                    isPickingRandom
+                  }
                   onClick={() => {
                     if (customSurpriseQuantity !== null) {
                       selectRandomQuantity(customSurpriseQuantity);
                     }
                   }}
                 >
-                  <Zap className="size-4" />
+                  {isPickingRandom ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <Zap className="size-4" />
+                  )}
                   Surpresinha
                 </Button>
               </div>
@@ -343,10 +337,7 @@ export function NumberGrid({
                   <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted" />
                   <Input
                     value={search}
-                    onChange={(event) => {
-                      setSearch(event.target.value);
-                      resetPage();
-                    }}
+                    onChange={(event) => setSearch(event.target.value)}
                     inputMode="numeric"
                     placeholder="Ex: 125"
                     className="pl-9"
@@ -358,10 +349,11 @@ export function NumberGrid({
                 Status
                 <Select
                   value={statusFilter}
-                  onChange={(event) => {
-                    setStatusFilter(event.target.value as NumberGridStatus);
-                    resetPage();
-                  }}
+                  onChange={(event) =>
+                    setStatusFilter(
+                      event.target.value as Exclude<NumberGridStatus, "selected">,
+                    )
+                  }
                 >
                   {statusOptions.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -375,10 +367,7 @@ export function NumberGrid({
                 De
                 <Input
                   value={fromNumber}
-                  onChange={(event) => {
-                    setFromNumber(event.target.value);
-                    resetPage();
-                  }}
+                  onChange={(event) => setFromNumber(event.target.value)}
                   inputMode="numeric"
                   placeholder={String(minNumber)}
                 />
@@ -388,10 +377,7 @@ export function NumberGrid({
                 Ate
                 <Input
                   value={toNumber}
-                  onChange={(event) => {
-                    setToNumber(event.target.value);
-                    resetPage();
-                  }}
+                  onChange={(event) => setToNumber(event.target.value)}
                   inputMode="numeric"
                   placeholder={String(maxNumber)}
                 />
@@ -402,11 +388,12 @@ export function NumberGrid({
                 <Select
                   value={String(pageSize)}
                   onChange={(event) => {
-                    setPageSize(Number(event.target.value) as typeof pageSize);
-                    resetPage();
+                    const nextPageSize = Number(event.target.value);
+                    setPageSize(nextPageSize);
+                    loadPage({ page: 1, pageSize: nextPageSize });
                   }}
                 >
-                  {pageSizeOptions.map((option) => (
+                  {raffleNumberPageSizeOptions.map((option) => (
                     <option key={option} value={option}>
                       {option}
                     </option>
@@ -439,10 +426,25 @@ export function NumberGrid({
                   Selecionado
                 </span>
               </div>
-              <Button type="button" variant="ghost" onClick={clearFilters}>
-                <X className="size-4" />
-                Limpar filtros
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={isLoadingPage}
+                  onClick={applyFilters}
+                >
+                  {isLoadingPage ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <Search className="size-4" />
+                  )}
+                  Aplicar
+                </Button>
+                <Button type="button" variant="ghost" onClick={resetFilters}>
+                  <X className="size-4" />
+                  Limpar filtros
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -451,57 +453,63 @@ export function NumberGrid({
               <Ticket className="size-4 text-primary" />
               Exibindo{" "}
               <span className="font-semibold text-foreground">
-                {visibleNumbers.length.toLocaleString("pt-BR")}
+                {pageData.numbers.length.toLocaleString("pt-BR")}
               </span>{" "}
               de{" "}
               <span className="font-semibold text-foreground">
-                {filteredNumbers.length.toLocaleString("pt-BR")}
+                {pageData.totalItems.toLocaleString("pt-BR")}
               </span>{" "}
-              numero{filteredNumbers.length === 1 ? "" : "s"} filtrado
-              {filteredNumbers.length === 1 ? "" : "s"}.
+              numero{pageData.totalItems === 1 ? "" : "s"} filtrado
+              {pageData.totalItems === 1 ? "" : "s"}.
             </div>
             <div className="flex items-center gap-2">
               <Button
                 type="button"
                 variant="secondary"
-                disabled={currentPage === 1}
-                onClick={() => setPage((value) => Math.max(value - 1, 1))}
+                disabled={pageData.page === 1 || isLoadingPage}
+                onClick={() => loadPage({ page: Math.max(pageData.page - 1, 1) })}
               >
                 Anterior
               </Button>
               <span className="min-w-24 text-center text-xs font-semibold text-muted">
-                {currentPage}/{totalPages}
+                {pageData.page}/{pageData.totalPages}
               </span>
               <Button
                 type="button"
                 variant="secondary"
-                disabled={currentPage === totalPages}
-                onClick={() => setPage((value) => Math.min(value + 1, totalPages))}
+                disabled={pageData.page === pageData.totalPages || isLoadingPage}
+                onClick={() =>
+                  loadPage({
+                    page: Math.min(pageData.page + 1, pageData.totalPages),
+                  })
+                }
               >
                 Proxima
               </Button>
             </div>
           </div>
 
-          {visibleNumbers.length > 0 ? (
+          {pageData.numbers.length > 0 ? (
             <div className="mt-4 grid grid-cols-5 gap-2 sm:grid-cols-8 md:grid-cols-10 xl:grid-cols-12 2xl:grid-cols-[repeat(14,minmax(0,1fr))]">
-              {visibleNumbers.map((item) => {
+              {pageData.numbers.map((item) => {
+                const displayStatus = getNumberStatus(item, selectedNumbers);
                 const selectable = item.status === "available";
-                const selected = selectable && selectedNumbers.has(item.number);
 
                 return (
                   <button
                     key={item.number}
                     type="button"
                     disabled={!selectable}
-                    aria-pressed={selected}
+                    aria-pressed={displayStatus === "selected"}
                     onClick={() => toggleNumber(item)}
                     className={cn(
                       "h-11 rounded-lg border font-mono text-xs font-bold transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 sm:h-12 sm:text-sm",
-                      selected ? statusStyles.selected : statusStyles[item.status],
+                      statusStyles[displayStatus],
                     )}
                     title={`${item.number} - ${
-                      selected ? "Selecionado" : statusLabels[item.status]
+                      displayStatus === "selected"
+                        ? "Selecionado"
+                        : statusLabels[item.status]
                     }`}
                   >
                     {item.number}

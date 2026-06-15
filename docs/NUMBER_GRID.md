@@ -19,13 +19,15 @@ Nao foram implementados:
 
 ## Carregamento dos Numeros
 
-Os numeros publicos sao carregados por `getPublicRaffleNumbers(raffleId)` em `src/app/actions/raffle-numbers.ts`.
+Os numeros publicos sao carregados por `getPublicRaffleNumberPage(...)` em `src/app/actions/raffle-numbers.ts`.
 
 A action:
 
 - valida que a rifa esta `active`;
 - valida que o tenant da rifa esta `active`;
 - consulta a view `public_raffle_numbers`;
+- aplica paginacao server-side;
+- aplica filtros por status, numero exato e faixa;
 - retorna apenas `number` e `status`.
 
 Campos sensiveis como `user_id`, `order_id`, dados pessoais e informacoes de pedido nao sao retornados para o frontend.
@@ -61,7 +63,7 @@ Ele oferece:
 - filtro por status;
 - busca por numero;
 - filtro por intervalo;
-- paginacao local;
+- paginacao server-side;
 - contador de resultados;
 - resumo de selecao;
 - CTA conectado ao fluxo real de reserva de numeros.
@@ -82,19 +84,21 @@ Ele mostra:
 
 ## Performance
 
-Para evitar travamento com rifas grandes, a tela nao renderiza todos os numeros simultaneamente.
+Para evitar travamento com rifas grandes, a tela nao carrega nem renderiza todos os numeros simultaneamente.
 
 A estrategia atual:
 
-- carrega uma lista segura e enxuta: `number` + `status`;
-- filtra em memoria no client;
-- renderiza apenas a pagina atual;
+- carrega somente a pagina atual com `number` + `status`;
+- filtra no servidor antes de transferir os dados;
+- renderiza somente a pagina recebida;
 - permite page size de 250, 500 ou 1000 numeros;
-- permite reduzir rapidamente o conjunto com busca, status e intervalo.
+- permite reduzir rapidamente o conjunto com busca, status e intervalo;
+- carrega estatisticas por status em consultas agregadas separadas;
+- executa a "surpresinha" no servidor, com RPC dedicada quando disponivel.
 
-Essa abordagem funciona bem para 100, 1.000 e cenarios maiores como 10.000 numeros sem criar uma grade gigante no DOM.
+Essa abordagem foi preparada para rifas de ate 50.000 numeros sem transferir o mapa completo para o navegador.
 
-Em uma etapa futura, se houver rifas com centenas de milhares de numeros, o caminho natural e paginação server-side ou virtualizacao dedicada.
+Em uma etapa futura, se houver rifas com centenas de milhares de numeros, o caminho natural e navegacao por blocos/faixas e compra por quantidade como fluxo principal.
 
 ## Admin Preview
 

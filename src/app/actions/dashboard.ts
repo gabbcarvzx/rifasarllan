@@ -1,6 +1,7 @@
 "use server";
 
 import { requireAdmin } from "@/lib/auth/require-admin";
+import { parseAdminDashboardStats } from "@/lib/admin/dashboard-shape";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type {
   AdminDashboardStats,
@@ -63,7 +64,16 @@ export async function getAdminDashboardStats(): Promise<DashboardResult> {
     };
   }
 
-  return { data: data as unknown as AdminDashboardStats };
+  const parsed = parseAdminDashboardStats(data);
+
+  if (!parsed) {
+    return {
+      data: null,
+      error: "Os indicadores administrativos retornaram em um formato inesperado.",
+    };
+  }
+
+  return { data: parsed };
 }
 
 export async function getAdminRaffleAnalytics(): Promise<RaffleAnalyticsResult> {

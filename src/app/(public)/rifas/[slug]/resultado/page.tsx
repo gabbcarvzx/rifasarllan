@@ -27,6 +27,15 @@ export async function generateMetadata({
     description: result.data
       ? `Confira o resultado publicado da rifa ${result.data.raffle.title}.`
       : undefined,
+    openGraph: result.data
+      ? {
+          title: `Resultado - ${result.data.raffle.title}`,
+          description: `Confira o resultado publicado da rifa ${result.data.raffle.title}.`,
+          images: result.data.raffle.main_image_url
+            ? [{ url: result.data.raffle.main_image_url }]
+            : undefined,
+        }
+      : undefined,
   };
 }
 

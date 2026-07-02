@@ -10,12 +10,12 @@ type BadgeVariant =
   | "muted";
 
 const variants: Record<BadgeVariant, string> = {
-  default: "border-accent/30 bg-accent/15 text-amber-100",
-  success: "border-primary/30 bg-primary/15 text-emerald-100",
-  warning: "border-accent/35 bg-accent/15 text-amber-100",
-  info: "border-info/35 bg-info/15 text-sky-100",
-  danger: "border-danger/35 bg-danger/15 text-rose-100",
-  muted: "border-white/10 bg-white/[0.06] text-muted",
+  default: "border-accent/35 bg-accent/16 text-accent-foreground",
+  success: "border-success/35 bg-success/16 text-success-foreground",
+  warning: "border-warning/35 bg-warning/18 text-warning-foreground",
+  info: "border-info/35 bg-info/18 text-info-foreground",
+  danger: "border-danger/35 bg-danger/16 text-danger-foreground",
+  muted: "border-border/85 bg-card/75 text-muted",
 };
 
 export type BadgeProps = React.HTMLAttributes<HTMLSpanElement> & {

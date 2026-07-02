@@ -1,9 +1,16 @@
 import Link from "next/link";
-import { CalendarDays, ExternalLink, TicketCheck } from "lucide-react";
+import {
+  ArrowRight,
+  CalendarDays,
+  ExternalLink,
+  TicketCheck,
+} from "lucide-react";
 import { AccountEmptyState } from "@/components/account/account-empty-state";
 import { MyNumberBadge } from "@/components/account/my-number-badge";
 import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { SectionHeading } from "@/components/ui/section-heading";
 import { formatDateTime } from "@/lib/format";
 import { raffleStatusLabels } from "@/lib/account/status";
 import { cn } from "@/lib/utils";
@@ -48,16 +55,28 @@ export function MyNumbersList({
 
   return (
     <div className="space-y-5">
+      <SectionHeading
+        eyebrow="Organizacao rapida"
+        title="Encontre seus numeros sem procurar demais"
+        description="Filtre por status, abra o pedido vinculado e volte para a campanha com poucos toques."
+        action={
+          <Link href="/rifas" className={buttonVariants({ variant: "secondary", size: "sm" })}>
+            Explorar campanhas
+            <ArrowRight className="size-4" />
+          </Link>
+        }
+      />
+
       <div className="flex gap-2 overflow-x-auto pb-1" aria-label="Filtrar numeros">
         {filters.map((item) => (
           <Link
             key={item.value}
             href={item.value === "all" ? "/meus-numeros" : `/meus-numeros?status=${item.value}`}
             className={cn(
-              "shrink-0 rounded-lg border px-3 py-2 text-xs font-semibold transition",
+              "shrink-0 rounded-[var(--radius-sm)] border px-3 py-2 text-xs font-semibold transition",
               filter === item.value
                 ? "border-primary/35 bg-primary/12 text-primary"
-                : "border-white/10 bg-white/[0.04] text-muted hover:text-foreground",
+                : "border-border/80 bg-surface-raised/50 text-muted hover:text-foreground",
             )}
           >
             {item.label}
@@ -87,7 +106,7 @@ export function MyNumbersList({
 
           return (
             <Card key={group.raffle.id} className="overflow-hidden">
-              <div className="flex flex-col gap-3 border-b border-white/10 p-5 sm:flex-row sm:items-start sm:justify-between">
+              <div className="flex flex-col gap-3 border-b border-border/80 p-5 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
                     <h2 className="text-lg font-bold text-foreground">
@@ -115,10 +134,37 @@ export function MyNumbersList({
                 ) : null}
               </div>
 
+              <div className="grid gap-4 border-b border-border/80 p-5 sm:grid-cols-3">
+                <div className="rounded-[var(--radius-sm)] border border-border/80 bg-surface-raised/55 p-3">
+                  <p className="text-xs uppercase tracking-[0.12em] text-muted">
+                    Total de numeros
+                  </p>
+                  <p className="mt-2 text-xl font-bold text-foreground">
+                    {group.numbers.length}
+                  </p>
+                </div>
+                <div className="rounded-[var(--radius-sm)] border border-border/80 bg-surface-raised/55 p-3">
+                  <p className="text-xs uppercase tracking-[0.12em] text-muted">
+                    Confirmados
+                  </p>
+                  <p className="mt-2 text-xl font-bold text-success">
+                    {group.numbers.filter((entry) => entry.status === "paid").length}
+                  </p>
+                </div>
+                <div className="rounded-[var(--radius-sm)] border border-border/80 bg-surface-raised/55 p-3">
+                  <p className="text-xs uppercase tracking-[0.12em] text-muted">
+                    Em reserva
+                  </p>
+                  <p className="mt-2 text-xl font-bold text-warning">
+                    {group.numbers.filter((entry) => entry.status === "reserved").length}
+                  </p>
+                </div>
+              </div>
+
               <div className="grid gap-5 p-5">
                 {orders.map(([orderId, entries]) => (
                   <div key={orderId} className="grid gap-3">
-                    <div className="flex flex-col gap-1 border-b border-white/10 pb-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex flex-col gap-1 border-b border-border/80 pb-3 sm:flex-row sm:items-center sm:justify-between">
                       <Link
                         href={`/pedido/${orderId}`}
                         className="truncate font-mono text-xs font-semibold text-primary hover:text-emerald-300"
@@ -143,6 +189,17 @@ export function MyNumbersList({
                   </div>
                 ))}
               </div>
+
+              {group.raffle.slug && group.raffle.status === "active" ? (
+                <div className="flex justify-end border-t border-border/80 p-4">
+                  <Link
+                    href={`/rifas/${group.raffle.slug}`}
+                    className={buttonVariants({ variant: "secondary", size: "sm" })}
+                  >
+                    Comprar mais numeros
+                  </Link>
+                </div>
+              ) : null}
             </Card>
           );
         })

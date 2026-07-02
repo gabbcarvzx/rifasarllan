@@ -1,4 +1,4 @@
-import { CalendarDays, Mail, ShieldCheck, Smartphone } from "lucide-react";
+import { CalendarDays, Mail, ShieldCheck, Smartphone, WalletCards } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { formatDate } from "@/lib/format";
@@ -17,11 +17,16 @@ export function ProfileCard({ profile }: { profile: MyProfile }) {
       value: formatDate(profile.created_at),
       icon: CalendarDays,
     },
+    {
+      label: "Acesso protegido",
+      value: profile.role === "admin" ? "Conta administrativa" : "Conta participante",
+      icon: WalletCards,
+    },
   ];
 
   return (
     <Card className="overflow-hidden">
-      <div className="flex items-start justify-between gap-4 border-b border-white/10 p-5">
+      <div className="flex items-start justify-between gap-4 border-b border-border/80 p-5">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">
             Perfil
@@ -36,7 +41,7 @@ export function ProfileCard({ profile }: { profile: MyProfile }) {
         </Badge>
       </div>
 
-      <div className="grid divide-y divide-white/10">
+      <div className="grid divide-y divide-border/80">
         {details.map((detail) => {
           const Icon = detail.icon;
 

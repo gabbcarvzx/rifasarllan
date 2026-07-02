@@ -9,7 +9,9 @@ export default function PublicLayout({
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <Header />
-      <main className="flex-1">{children}</main>
+      <main id="conteudo-principal" tabIndex={-1} className="flex-1 focus:outline-none">
+        {children}
+      </main>
       <Footer />
     </div>
   );

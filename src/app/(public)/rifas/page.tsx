@@ -9,6 +9,7 @@ import { getPublicRaffleCatalog } from "@/lib/raffles/public-queries";
 
 export const metadata: Metadata = {
   title: "Rifas",
+  description: "Explore campanhas ativas, confira premios e reserve seus numeros em uma experiencia organizada e transparente.",
 };
 
 export default async function RifasPage() {

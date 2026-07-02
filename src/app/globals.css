@@ -3,37 +3,83 @@
 :root {
   --background: #060808;
   --foreground: #f7f2e8;
+  --card: #161c1a;
+  --card-foreground: #f7f2e8;
   --surface: #0d1110;
   --surface-raised: #141a18;
+  --input: #0f1513;
+  --input-foreground: #f7f2e8;
+  --header: #08100e;
+  --header-foreground: #f7f2e8;
+  --footer: #050706;
+  --footer-foreground: #eef5ef;
+  --sidebar: #0b0f0e;
+  --sidebar-foreground: #f4f7f4;
   --muted: #9da8a0;
   --border: #24302c;
   --primary: #22c55e;
   --primary-foreground: #031008;
+  --secondary: #d6a94f;
+  --secondary-foreground: #120d03;
   --accent: #d6a94f;
   --accent-foreground: #120d03;
+  --success: #16a34a;
+  --success-foreground: #f5fff8;
+  --warning: #f59e0b;
+  --warning-foreground: #1b1202;
+  --info-foreground: #04141d;
   --shadow-primary: 0 24px 80px -40px rgba(34, 197, 94, 0.55);
   --shadow-secondary: 0 22px 72px -44px rgba(214, 169, 79, 0.7);
   --info: #38bdf8;
   --danger: #fb7185;
+  --danger-foreground: #fff5f7;
+  --radius-xs: 0.5rem;
+  --radius-sm: 0.75rem;
+  --radius-md: 1rem;
+  --radius-lg: 1.25rem;
+  --radius-xl: 1.75rem;
 }
 
 @theme inline {
-  --color-background: #060808;
-  --color-foreground: #f7f2e8;
-  --color-surface: #0d1110;
-  --color-surface-raised: #141a18;
-  --color-muted: #9da8a0;
-  --color-border: #24302c;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-input: var(--input);
+  --color-input-foreground: var(--input-foreground);
+  --color-header: var(--header);
+  --color-header-foreground: var(--header-foreground);
+  --color-footer: var(--footer);
+  --color-footer-foreground: var(--footer-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
-  --color-info: #38bdf8;
-  --color-danger: #fb7185;
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-danger: var(--danger);
+  --color-danger-foreground: var(--danger-foreground);
   --font-sans: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, monospace;
   --shadow-premium: var(--shadow-primary);
   --shadow-gold: var(--shadow-secondary);
+  --radius-xs: var(--radius-xs);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
 }
 
 body {
@@ -45,6 +91,11 @@ body {
 
 * {
   border-color: var(--border);
+}
+
+html {
+  color-scheme: dark;
+  scroll-behavior: smooth;
 }
 
 ::selection {
@@ -60,11 +111,33 @@ select {
   -webkit-tap-highlight-color: transparent;
 }
 
+:where(a, button, input, textarea, select, [role="button"], [role="tab"]):focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--primary) 78%, white);
+  outline-offset: 2px;
+}
+
 input,
 textarea,
 select,
 button {
   font: inherit;
+}
+
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -3rem;
+  z-index: 100;
+  border-radius: var(--radius-sm);
+  border: 1px solid color-mix(in srgb, var(--primary) 45%, transparent);
+  background: color-mix(in srgb, var(--card) 96%, transparent);
+  color: var(--foreground);
+  padding: 0.75rem 1rem;
+  transition: top 160ms ease;
+}
+
+.skip-link:focus {
+  top: 1rem;
 }
 
 .premium-grid {
@@ -76,4 +149,9 @@ button {
 
 .text-balance {
   text-wrap: balance;
+}
+
+.surface-panel {
+  background: color-mix(in srgb, var(--surface-raised) 88%, transparent);
+  border-color: color-mix(in srgb, var(--border) 75%, transparent);
 }

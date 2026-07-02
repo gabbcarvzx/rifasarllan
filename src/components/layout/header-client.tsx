@@ -1,16 +1,16 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  ArrowRight,
   ChevronDown,
   LayoutDashboard,
   LogOut,
   Menu,
+  PanelTop,
   ReceiptText,
   ShieldCheck,
-  Ticket,
   TicketCheck,
   UserCircle,
   UserPlus,
@@ -18,7 +18,10 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { signOut } from "@/app/actions/auth";
+import { BrandMark } from "@/components/layout/brand-mark";
+import { Alert } from "@/components/ui/alert";
 import { buttonVariants } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
@@ -50,6 +53,8 @@ export function HeaderClient({
     { href: "/", label: "Inicio" },
     { href: "/rifas", label: "Rifas" },
   ];
+  const mobileMenuId = "mobile-main-menu";
+  const accountMenuId = "desktop-account-menu";
 
   useEffect(() => {
     let active = true;
@@ -96,40 +101,43 @@ export function HeaderClient({
     };
   }, [pathname]);
 
+  useEffect(() => {
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setOpen(false);
+        setAccountOpen(false);
+      }
+    }
+
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, []);
+
   const resolvedLoggedIn = account.isLoggedIn;
   const resolvedAdmin = account.isAdmin;
   const resolvedDisplayName = account.displayName;
 
   return (
-    <header className="sticky top-0 z-40 border-b border-white/10 bg-background/82 backdrop-blur-xl">
+    <header className="sticky top-0 z-40 border-b border-border/80 bg-header/88 text-header-foreground backdrop-blur-xl">
       <div className="mx-auto flex h-18 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Link href="/" className="flex items-center gap-3" onClick={() => setOpen(false)}>
-          <span className="relative flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-accent/30 bg-accent/15 text-accent">
-            {logoUrl ? (
-              <Image
-                src={logoUrl}
-                alt={`Logo ${platformName}`}
-                fill
-                className="object-contain p-1"
-                sizes="40px"
-              />
-            ) : (
-              <Ticket className="size-5" />
-            )}
-          </span>
-          <span className="max-w-40 truncate text-base font-bold text-foreground lg:max-w-56">
-            {platformName}
-          </span>
-        </Link>
+        <BrandMark
+          href="/"
+          onClick={() => setOpen(false)}
+          name={platformName}
+          logoUrl={logoUrl}
+          subtitle="Plataforma premium"
+          className="max-w-[16rem]"
+        />
 
-        <nav className="hidden items-center gap-1 md:flex">
+        <nav className="hidden items-center gap-1 rounded-full border border-border/80 bg-card/72 p-1 md:flex">
           {navigation.map((item) => (
             <Link
               key={item.href}
               href={item.href}
+              aria-current={pathname === item.href ? "page" : undefined}
               className={cn(
-                "rounded-lg px-3 py-2 text-sm font-medium text-muted transition hover:bg-white/[0.06] hover:text-foreground",
-                pathname === item.href && "bg-white/[0.08] text-foreground",
+                "rounded-full px-4 py-2 text-sm font-medium text-muted transition hover:bg-card hover:text-foreground",
+                pathname === item.href && "bg-primary/16 text-foreground",
               )}
             >
               {item.label}
@@ -145,6 +153,7 @@ export function HeaderClient({
                 className={buttonVariants({ variant: "secondary", size: "sm" })}
                 aria-expanded={accountOpen}
                 aria-haspopup="menu"
+                aria-controls={accountMenuId}
                 onClick={() => setAccountOpen((current) => !current)}
               >
                 {resolvedAdmin ? (
@@ -157,12 +166,13 @@ export function HeaderClient({
               </button>
 
               {accountOpen ? (
-                <div
-                  className="absolute right-0 top-11 z-50 w-64 overflow-hidden rounded-lg border border-white/10 bg-surface-raised shadow-premium"
+                <Card
+                  className="absolute right-0 top-12 z-50 w-72 overflow-hidden border-border/85 bg-card/98"
                   role="menu"
+                  id={accountMenuId}
                 >
                   {resolvedDisplayName ? (
-                    <div className="border-b border-white/10 px-4 py-3">
+                    <div className="border-b border-border/80 px-4 py-3">
                       <p className="text-xs uppercase tracking-[0.14em] text-muted">
                         Conectado como
                       </p>
@@ -174,7 +184,7 @@ export function HeaderClient({
                   <div className="grid p-2">
                     <Link
                       href="/minha-conta"
-                      className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-foreground hover:bg-white/[0.06]"
+                      className="flex items-center gap-3 rounded-[var(--radius-sm)] px-3 py-2.5 text-sm font-semibold text-foreground hover:bg-card"
                       role="menuitem"
                       onClick={() => setAccountOpen(false)}
                     >
@@ -183,7 +193,7 @@ export function HeaderClient({
                     </Link>
                     <Link
                       href="/meus-pedidos"
-                      className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-foreground hover:bg-white/[0.06]"
+                      className="flex items-center gap-3 rounded-[var(--radius-sm)] px-3 py-2.5 text-sm font-semibold text-foreground hover:bg-card"
                       role="menuitem"
                       onClick={() => setAccountOpen(false)}
                     >
@@ -192,7 +202,7 @@ export function HeaderClient({
                     </Link>
                     <Link
                       href="/meus-numeros"
-                      className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-foreground hover:bg-white/[0.06]"
+                      className="flex items-center gap-3 rounded-[var(--radius-sm)] px-3 py-2.5 text-sm font-semibold text-foreground hover:bg-card"
                       role="menuitem"
                       onClick={() => setAccountOpen(false)}
                     >
@@ -202,7 +212,7 @@ export function HeaderClient({
                     {resolvedAdmin ? (
                       <Link
                         href="/admin"
-                        className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-accent hover:bg-accent/10"
+                        className="flex items-center gap-3 rounded-[var(--radius-sm)] px-3 py-2.5 text-sm font-semibold text-accent hover:bg-accent/10"
                         role="menuitem"
                         onClick={() => setAccountOpen(false)}
                       >
@@ -211,7 +221,7 @@ export function HeaderClient({
                       </Link>
                     ) : null}
                   </div>
-                  <form action={signOut} className="border-t border-white/10 p-2">
+                  <form action={signOut} className="border-t border-border/80 p-2">
                     <button
                       type="submit"
                       className={buttonVariants({
@@ -225,7 +235,7 @@ export function HeaderClient({
                       Sair
                     </button>
                   </form>
-                </div>
+                </Card>
               ) : null}
             </div>
           ) : (
@@ -249,9 +259,10 @@ export function HeaderClient({
 
         <button
           type="button"
-          className="inline-flex size-10 items-center justify-center rounded-lg border border-white/10 bg-white/[0.06] text-foreground md:hidden"
+          className="inline-flex size-10 items-center justify-center rounded-[var(--radius-sm)] border border-border/80 bg-card/80 text-foreground md:hidden"
           aria-label="Abrir menu"
           aria-expanded={open}
+          aria-controls={mobileMenuId}
           onClick={() => setOpen((current) => !current)}
         >
           {open ? <X className="size-5" /> : <Menu className="size-5" />}
@@ -259,87 +270,67 @@ export function HeaderClient({
       </div>
 
       {open ? (
-        <div className="border-t border-white/10 bg-background/95 px-4 py-4 md:hidden">
-          <nav className="mx-auto grid max-w-7xl gap-2">
+        <div
+          id={mobileMenuId}
+          className="border-t border-border/80 bg-header/96 px-4 py-4 md:hidden"
+        >
+          <div className="mx-auto grid max-w-7xl gap-3">
             {resolvedDisplayName ? (
-              <div className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-3">
-                <p className="text-xs uppercase tracking-[0.16em] text-muted">
-                  Conectado
-                </p>
-                <p className="mt-1 truncate text-sm font-semibold text-foreground">
-                  {resolvedDisplayName}
-                </p>
-              </div>
+              <Alert
+                tone="info"
+                title={resolvedDisplayName}
+                description={resolvedAdmin ? "Conta administrativa ativa." : "Conta participante ativa."}
+              />
             ) : null}
-            {navigation.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="rounded-lg px-3 py-3 text-sm font-semibold text-foreground hover:bg-white/[0.06]"
-                onClick={() => setOpen(false)}
-              >
-                {item.label}
-              </Link>
-            ))}
-            {resolvedLoggedIn ? (
-              <div className="grid gap-1 border-t border-white/10 pt-2">
+            <div className="grid gap-2 rounded-[var(--radius-md)] border border-border/80 bg-card/78 p-2">
+              {navigation.map((item) => (
                 <Link
-                  href="/minha-conta"
-                  className="rounded-lg px-3 py-3 text-sm font-semibold text-foreground hover:bg-white/[0.06]"
+                  key={item.href}
+                  href={item.href}
+                  aria-current={pathname === item.href ? "page" : undefined}
+                  className="flex items-center justify-between rounded-[var(--radius-sm)] px-3 py-3 text-sm font-semibold text-foreground hover:bg-background/50"
                   onClick={() => setOpen(false)}
                 >
-                  Minha conta
+                  {item.label}
+                  <ArrowRight className="size-4 text-muted" />
                 </Link>
-                <Link
-                  href="/meus-pedidos"
-                  className="rounded-lg px-3 py-3 text-sm font-semibold text-foreground hover:bg-white/[0.06]"
-                  onClick={() => setOpen(false)}
-                >
-                  Meus pedidos
-                </Link>
-                <Link
-                  href="/meus-numeros"
-                  className="rounded-lg px-3 py-3 text-sm font-semibold text-foreground hover:bg-white/[0.06]"
-                  onClick={() => setOpen(false)}
-                >
-                  Meus numeros
-                </Link>
-                {resolvedAdmin ? (
-                  <Link
-                    href="/admin"
-                    className="rounded-lg px-3 py-3 text-sm font-semibold text-accent hover:bg-accent/10"
-                    onClick={() => setOpen(false)}
-                  >
-                    Painel admin
-                  </Link>
-                ) : null}
-              </div>
-            ) : null}
-            <div className="mt-2 grid grid-cols-2 gap-2">
+              ))}
               {resolvedLoggedIn ? (
                 <>
                   <Link
                     href="/minha-conta"
-                    className={buttonVariants({
-                      variant: "secondary",
-                      size: "md",
-                    })}
+                    className="flex items-center justify-between rounded-[var(--radius-sm)] px-3 py-3 text-sm font-semibold text-foreground hover:bg-background/50"
                     onClick={() => setOpen(false)}
                   >
-                    Conta
+                    Minha conta
+                    <ArrowRight className="size-4 text-muted" />
                   </Link>
-                  <form action={signOut}>
-                    <button
-                      type="submit"
-                      className={buttonVariants({
-                        variant: "ghost",
-                        size: "md",
-                        className: "w-full",
-                      })}
+                  <Link
+                    href="/meus-pedidos"
+                    className="flex items-center justify-between rounded-[var(--radius-sm)] px-3 py-3 text-sm font-semibold text-foreground hover:bg-background/50"
+                    onClick={() => setOpen(false)}
+                  >
+                    Meus pedidos
+                    <ArrowRight className="size-4 text-muted" />
+                  </Link>
+                  <Link
+                    href="/meus-numeros"
+                    className="flex items-center justify-between rounded-[var(--radius-sm)] px-3 py-3 text-sm font-semibold text-foreground hover:bg-background/50"
+                    onClick={() => setOpen(false)}
+                  >
+                    Meus numeros
+                    <ArrowRight className="size-4 text-muted" />
+                  </Link>
+                  {resolvedAdmin ? (
+                    <Link
+                      href="/admin"
+                      className="flex items-center justify-between rounded-[var(--radius-sm)] bg-accent/10 px-3 py-3 text-sm font-semibold text-accent"
+                      onClick={() => setOpen(false)}
                     >
-                      Sair
-                    </button>
-                  </form>
+                      Painel admin
+                      <PanelTop className="size-4" />
+                    </Link>
+                  ) : null}
                 </>
               ) : (
                 <>
@@ -360,7 +351,22 @@ export function HeaderClient({
                 </>
               )}
             </div>
-          </nav>
+            {resolvedLoggedIn ? (
+              <form action={signOut}>
+                <button
+                  type="submit"
+                  className={buttonVariants({
+                    variant: "ghost",
+                    size: "md",
+                    className: "w-full",
+                  })}
+                >
+                  <LogOut className="size-4" />
+                  Sair
+                </button>
+              </form>
+            ) : null}
+          </div>
         </div>
       ) : null}
     </header>

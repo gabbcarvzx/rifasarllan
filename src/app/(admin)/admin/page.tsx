@@ -16,6 +16,7 @@ import { PageHeader } from "@/components/admin/page-header";
 import { AdminOnboardingChecklist } from "@/components/admin/onboarding/admin-onboarding-checklist";
 import { AuthMessage } from "@/components/auth/auth-message";
 import { buttonVariants } from "@/components/ui/button";
+import { SectionHeading } from "@/components/ui/section-heading";
 
 export const dynamic = "force-dynamic";
 
@@ -74,26 +75,21 @@ export default async function AdminDashboardPage() {
           <RevenueOverview revenue={stats.revenue} />
 
           <section aria-labelledby="raffle-occupancy-title">
-            <div className="mb-4 flex items-end justify-between gap-4">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">
-                  Ocupacao das rifas
-                </p>
-                <h2
-                  id="raffle-occupancy-title"
-                  className="mt-2 text-xl font-bold text-foreground"
+            <SectionHeading
+              eyebrow="Ocupacao das rifas"
+              title="Campanhas em movimento"
+              description="Acompanhe as campanhas com sinais mais claros de tracao, baixa ocupacao ou necessidade de ajuste."
+              className="mb-4"
+              action={
+                <Link
+                  href="/admin/rifas"
+                  className={buttonVariants({ variant: "ghost", size: "sm" })}
                 >
-                  Campanhas em movimento
-                </h2>
-              </div>
-              <Link
-                href="/admin/rifas"
-                className={buttonVariants({ variant: "ghost", size: "sm" })}
-              >
-                Ver todas
-                <ArrowUpRight className="size-4" />
-              </Link>
-            </div>
+                  Ver todas
+                  <ArrowUpRight className="size-4" />
+                </Link>
+              }
+            />
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {occupancyRaffles.map((raffle) => (
                 <RaffleOccupancyCard key={raffle.id} raffle={raffle} />

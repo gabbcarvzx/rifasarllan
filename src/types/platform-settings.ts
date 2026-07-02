@@ -20,3 +20,37 @@ export type PlatformAssetField =
   | "logo_url"
   | "favicon_url"
   | "hero_banner_url";
+
+export type PlatformThemeTokenName =
+  | "background"
+  | "foreground"
+  | "muted"
+  | "border"
+  | "surface"
+  | "surfaceRaised"
+  | "card"
+  | "cardForeground"
+  | "input"
+  | "inputForeground"
+  | "header"
+  | "headerForeground"
+  | "footer"
+  | "footerForeground"
+  | "sidebar"
+  | "sidebarForeground"
+  | "primary"
+  | "primaryForeground"
+  | "secondary"
+  | "secondaryForeground"
+  | "accent"
+  | "accentForeground"
+  | "success"
+  | "successForeground"
+  | "warning"
+  | "warningForeground"
+  | "danger"
+  | "dangerForeground"
+  | "info"
+  | "infoForeground";
+
+export type PlatformThemeTokens = Record<PlatformThemeTokenName, string>;

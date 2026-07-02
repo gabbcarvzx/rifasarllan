@@ -1,23 +1,34 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { Check, Filter, Loader2, Search, Shuffle, Ticket, X, Zap } from "lucide-react";
+import { useMemo, useState, useTransition } from "react";
+import {
+  Check,
+  Filter,
+  Loader2,
+  Search,
+  Shuffle,
+  Sparkles,
+  Ticket,
+  X,
+} from "lucide-react";
 import {
   getPublicRaffleNumberPage,
   getPublicRandomAvailableNumbers,
   type RaffleNumberStats,
 } from "@/app/actions/raffle-numbers";
 import { SelectionSummary } from "@/components/raffles/selection-summary";
-import { Badge } from "@/components/ui/badge";
+import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { SectionHeading } from "@/components/ui/section-heading";
 import { Select } from "@/components/ui/select";
 import {
   defaultRaffleNumberPageSize,
   raffleNumberPageSizeOptions,
   type RaffleNumberPage,
 } from "@/lib/raffles/number-pagination";
+import { getQuickPickOptions } from "@/lib/raffles/purchase-flow";
 import { cn } from "@/lib/utils";
 import type {
   NumberGridStatus,
@@ -70,7 +81,6 @@ const statusOptions: Array<{
   { value: "cancelled", label: "Cancelados" },
 ];
 
-const quickPickOptions = [5, 10, 20] as const;
 const maxNumbersPerReservation = 100;
 
 function parseOptionalNumber(value: string) {
@@ -117,6 +127,10 @@ export function NumberGrid({
     (first, second) => first - second,
   );
   const quickPickLimit = Math.min(maxNumbersPerReservation, stats.available);
+  const quickPickOptions = useMemo(
+    () => getQuickPickOptions(maxNumbersPerReservation, stats.available),
+    [stats.available],
+  );
   const parsedSurpriseQuantity = parseOptionalNumber(surpriseQuantity);
   const customSurpriseQuantity =
     parsedSurpriseQuantity === null
@@ -217,23 +231,19 @@ export function NumberGrid({
   }
 
   return (
-    <Card className="p-5">
+    <Card className="overflow-hidden p-5 sm:p-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div>
-          <Badge variant="success">Escolha seus numeros</Badge>
-          <h2 className="mt-4 text-2xl font-bold tracking-tight text-foreground">
-            Grade visual da rifa
-          </h2>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
-            Selecione numeros disponiveis, use filtros por pagina e crie uma
-            reserva real por 15 minutos.
-          </p>
-        </div>
+        <SectionHeading
+          eyebrow="Etapa de compra"
+          title="Escolha seus numeros com mais clareza."
+          description="Use atalhos de quantidade, filtros e selecao manual para montar sua participacao do jeito mais rapido para voce."
+          className="flex-1"
+        />
         <div className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-4 lg:min-w-[420px]">
           {Object.entries(statusLabels).map(([status, label]) => (
             <div
               key={status}
-              className="rounded-lg border border-white/10 bg-black/18 p-3"
+              className="rounded-[var(--radius-md)] border border-border/80 bg-card/70 p-3"
             >
               <p className="text-muted">{label}</p>
               <p className="mt-1 text-lg font-bold text-foreground">
@@ -244,7 +254,7 @@ export function NumberGrid({
         </div>
       </div>
 
-      <div className="mt-5 rounded-lg border border-primary/20 bg-primary/[0.06] p-4">
+      <div className="mt-5 rounded-[var(--radius-lg)] border border-primary/20 bg-primary/[0.06] p-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-sm font-semibold text-foreground">
@@ -269,13 +279,20 @@ export function NumberGrid({
         </div>
       </div>
 
+      <Alert
+        tone="info"
+        title="Atalhos para comprar mais rapido"
+        description="Se voce ainda nao sabe quais numeros escolher, use as quantidades prontas e deixe a grade sugerir numeros disponiveis automaticamente."
+        className="mt-4"
+      />
+
       <div className="mt-6 grid gap-5 xl:grid-cols-[1fr_360px]">
         <div className="min-w-0">
-          <div className="grid gap-3 rounded-lg border border-white/10 bg-black/18 p-4">
+          <div className="grid gap-4 rounded-[var(--radius-lg)] border border-border/80 bg-card/78 p-4">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
                 <Filter className="size-4 text-accent" />
-                Filtros e busca
+                Atalhos, filtros e busca
               </div>
               <div className="flex flex-wrap gap-2">
                 {quickPickOptions.map((quantity) => (
@@ -292,10 +309,10 @@ export function NumberGrid({
                     ) : (
                       <Shuffle className="size-4" />
                     )}
-                    {quantity}
+                    +{quantity}
                   </Button>
                 ))}
-                <label className="flex min-w-32 items-center gap-2 rounded-md border border-white/10 bg-white/[0.04] px-2 py-1 text-xs font-semibold text-muted">
+                <label className="flex min-w-32 items-center gap-2 rounded-[var(--radius-sm)] border border-border/80 bg-background/30 px-2 py-1 text-xs font-semibold text-muted">
                   Qtd.
                   <Input
                     value={surpriseQuantity}
@@ -324,9 +341,9 @@ export function NumberGrid({
                   {isPickingRandom ? (
                     <Loader2 className="size-4 animate-spin" />
                   ) : (
-                    <Zap className="size-4" />
+                    <Sparkles className="size-4" />
                   )}
-                  Surpresinha
+                  Escolha automatica
                 </Button>
               </div>
             </div>
@@ -448,7 +465,7 @@ export function NumberGrid({
             </div>
           </div>
 
-          <div className="mt-4 flex flex-col gap-3 rounded-lg border border-white/10 bg-white/[0.03] p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mt-4 flex flex-col gap-3 rounded-[var(--radius-lg)] border border-border/80 bg-card/60 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2 text-sm text-muted">
               <Ticket className="size-4 text-primary" />
               Exibindo{" "}
@@ -503,7 +520,7 @@ export function NumberGrid({
                     aria-pressed={displayStatus === "selected"}
                     onClick={() => toggleNumber(item)}
                     className={cn(
-                      "h-11 rounded-lg border font-mono text-xs font-bold transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 sm:h-12 sm:text-sm",
+                      "h-11 rounded-[var(--radius-sm)] border font-mono text-xs font-bold transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 sm:h-12 sm:text-sm",
                       statusStyles[displayStatus],
                     )}
                     title={`${item.number} - ${
@@ -518,7 +535,7 @@ export function NumberGrid({
               })}
             </div>
           ) : (
-            <div className="mt-4 rounded-lg border border-dashed border-white/15 bg-white/[0.03] p-8 text-center">
+            <div className="mt-4 rounded-[var(--radius-lg)] border border-dashed border-border/80 bg-card/55 p-8 text-center">
               <p className="font-semibold text-foreground">
                 Nenhum numero encontrado
               </p>

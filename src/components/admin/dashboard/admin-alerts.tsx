@@ -5,8 +5,9 @@ import {
   CircleAlert,
   Info,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { SectionHeading } from "@/components/ui/section-heading";
 import { cn } from "@/lib/utils";
 import type { AdminDashboardAlert } from "@/types/dashboard";
 
@@ -29,14 +30,11 @@ export function AdminAlerts({ alerts }: { alerts: AdminDashboardAlert[] }) {
   return (
     <Card className="p-5">
       <div className="flex items-start justify-between gap-4">
-        <div>
-          <Badge variant={alerts.length > 0 ? "warning" : "success"}>
-            Monitoramento
-          </Badge>
-          <h2 className="mt-3 text-xl font-bold text-foreground">
-            Alertas administrativos
-          </h2>
-        </div>
+        <SectionHeading
+          eyebrow="Monitoramento"
+          title="Alertas administrativos"
+          description="Itens que merecem acao prioritaria para manter campanha, conversao e operacao em ordem."
+        />
         <span className="font-mono text-2xl font-bold text-foreground">
           {alerts.length}
         </span>
@@ -53,7 +51,7 @@ export function AdminAlerts({ alerts }: { alerts: AdminDashboardAlert[] }) {
                 key={alert.alert_key}
                 href={alert.href}
                 className={cn(
-                  "flex items-start gap-3 rounded-lg border p-3 transition hover:brightness-110",
+                  "flex items-start gap-3 rounded-[var(--radius-sm)] border p-3 transition hover:brightness-110",
                   style.className,
                 )}
               >
@@ -72,11 +70,12 @@ export function AdminAlerts({ alerts }: { alerts: AdminDashboardAlert[] }) {
           })}
         </div>
       ) : (
-        <div className="mt-5 rounded-lg border border-primary/20 bg-primary/10 p-6 text-center">
-          <p className="font-semibold text-emerald-100">Operacao em ordem</p>
-          <p className="mt-2 text-sm leading-6 text-muted">
-            Nenhum alerta administrativo foi identificado agora.
-          </p>
+        <div className="mt-5">
+          <EmptyState
+            title="Operacao em ordem"
+            description="Nenhum alerta administrativo foi identificado agora."
+            className="min-h-52 bg-success/8"
+          />
         </div>
       )}
     </Card>

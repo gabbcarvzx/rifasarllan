@@ -1,7 +1,9 @@
 import Link from "next/link";
-import { ArrowUpRight, Inbox } from "lucide-react";
+import { ArrowUpRight, CalendarDays, Inbox, Ticket } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { SectionHeading } from "@/components/ui/section-heading";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import type { AdminRecentOrder } from "@/types/dashboard";
 import type { ComponentProps } from "react";
@@ -20,18 +22,81 @@ const orderStatus: Record<
 export function RecentOrdersTable({ orders }: { orders: AdminRecentOrder[] }) {
   return (
     <Card className="overflow-hidden">
-      <div className="flex items-start justify-between gap-4 border-b border-white/10 p-5">
+      <div className="flex items-start justify-between gap-4 border-b border-border/80 p-5">
         <div>
           <Badge variant="default">Movimento recente</Badge>
-          <h2 className="mt-3 text-xl font-bold text-foreground">
-            Ultimos pedidos
-          </h2>
+          <SectionHeading
+            title="Ultimos pedidos"
+            description="Leitura rapida de participantes, status e volume financeiro mais recente."
+            className="mt-3"
+          />
         </div>
         <Inbox className="size-5 text-accent" />
       </div>
 
       {orders.length > 0 ? (
-        <div className="overflow-x-auto">
+        <>
+          <div className="grid gap-3 p-4 lg:hidden">
+            {orders.map((order) => {
+              const status = orderStatus[order.status];
+
+              return (
+                <div
+                  key={order.id}
+                  className="rounded-[var(--radius-sm)] border border-border/80 bg-surface-raised/55 p-4"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate font-semibold text-foreground">
+                        {order.customer_name ?? "Participante"}
+                      </p>
+                      <p className="mt-1 truncate text-xs text-muted">
+                        {order.customer_email ?? "E-mail nao informado"}
+                      </p>
+                    </div>
+                    <Badge variant={status.variant}>{status.label}</Badge>
+                  </div>
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.12em] text-muted">
+                        Rifa
+                      </p>
+                      <p className="mt-1 font-medium text-foreground">
+                        {order.raffle_title}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.12em] text-muted">
+                        Valor
+                      </p>
+                      <p className="mt-1 font-mono font-semibold text-accent">
+                        {formatCurrency(order.amount)}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-muted">
+                      <Ticket className="size-4 text-primary" />
+                      {order.number_count.toLocaleString("pt-BR")} numero(s)
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-muted">
+                      <CalendarDays className="size-4 text-info" />
+                      {formatDateTime(order.created_at)}
+                    </div>
+                  </div>
+                  <div className="mt-4 flex justify-end">
+                    <Link
+                      href={`/admin/rifas/${order.raffle_id}/editar`}
+                      className="inline-flex items-center gap-2 text-sm font-semibold text-primary"
+                    >
+                      Abrir campanha
+                      <ArrowUpRight className="size-4" />
+                    </Link>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="hidden overflow-x-auto lg:block">
           <table className="w-full min-w-[840px] text-left text-sm">
             <thead className="bg-white/[0.03] text-xs uppercase tracking-[0.14em] text-muted">
               <tr>
@@ -79,7 +144,7 @@ export function RecentOrdersTable({ orders }: { orders: AdminRecentOrder[] }) {
                       <Link
                         href={`/admin/rifas/${order.raffle_id}/editar`}
                         aria-label={`Abrir rifa do pedido ${order.id}`}
-                        className="inline-flex size-9 items-center justify-center rounded-lg border border-white/10 text-muted transition hover:border-primary/35 hover:text-foreground"
+                        className="inline-flex size-9 items-center justify-center rounded-[var(--radius-sm)] border border-border/80 text-muted transition hover:border-primary/35 hover:text-foreground"
                       >
                         <ArrowUpRight className="size-4" />
                       </Link>
@@ -89,13 +154,15 @@ export function RecentOrdersTable({ orders }: { orders: AdminRecentOrder[] }) {
               })}
             </tbody>
           </table>
-        </div>
+          </div>
+        </>
       ) : (
-        <div className="p-8 text-center">
-          <p className="font-semibold text-foreground">Nenhum pedido ainda</p>
-          <p className="mt-2 text-sm text-muted">
-            As primeiras reservas aparecerao aqui.
-          </p>
+        <div className="p-5">
+          <EmptyState
+            title="Nenhum pedido ainda"
+            description="As primeiras reservas aparecerao aqui."
+            className="min-h-52"
+          />
         </div>
       )}
     </Card>

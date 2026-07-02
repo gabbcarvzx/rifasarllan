@@ -8,6 +8,7 @@ import {
   Zap,
 } from "lucide-react";
 import { StatCard } from "@/components/admin/stat-card";
+import { SectionHeading } from "@/components/ui/section-heading";
 import { formatCurrency } from "@/lib/format";
 import type { AdminDashboardStats } from "@/types/dashboard";
 
@@ -70,22 +71,17 @@ export function DashboardSummaryCards({
 
   return (
     <section aria-labelledby="dashboard-summary-title">
-      <div className="mb-4 flex items-end justify-between gap-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">
-            Resumo geral
+      <SectionHeading
+        eyebrow="Resumo geral"
+        title="Pulso da operacao"
+        description="Veja rapidamente volume de campanhas, participacao, pipeline em aberto e capacidade financeira do tenant."
+        className="mb-4"
+        action={
+          <p className="hidden text-xs text-muted sm:block">
+            Atualizado em tempo real
           </p>
-          <h2
-            id="dashboard-summary-title"
-            className="mt-2 text-xl font-bold text-foreground"
-          >
-            Pulso da operacao
-          </h2>
-        </div>
-        <p className="hidden text-xs text-muted sm:block">
-          Atualizado em tempo real
-        </p>
-      </div>
+        }
+      />
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {cards.map((card) => (
           <StatCard key={card.label} {...card} />

@@ -1,12 +1,13 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  ChartColumnBig,
   LayoutDashboard,
   LogOut,
   Menu,
+  PanelTop,
   Settings,
   ShieldCheck,
   Ticket,
@@ -14,6 +15,8 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { signOut } from "@/app/actions/auth";
+import { BrandMark } from "@/components/layout/brand-mark";
+import { Alert } from "@/components/ui/alert";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -64,29 +67,19 @@ export function AdminSidebar({
 
   return (
     <>
-      <div className="sticky top-0 z-40 border-b border-white/10 bg-background/90 px-4 py-3 backdrop-blur lg:hidden">
+      <div className="sticky top-0 z-40 border-b border-border/80 bg-sidebar/92 px-4 py-3 backdrop-blur lg:hidden">
         <div className="flex items-center justify-between">
-          <Link href="/admin" className="flex items-center gap-3">
-            <span className="relative flex size-9 items-center justify-center overflow-hidden rounded-lg border border-accent/30 bg-accent/15 text-accent">
-              {logoUrl ? (
-                <Image
-                  src={logoUrl}
-                  alt={`Logo ${platformName}`}
-                  fill
-                  className="object-contain p-1"
-                  sizes="36px"
-                />
-              ) : (
-                <Ticket className="size-4" />
-              )}
-            </span>
-            <span className="max-w-48 truncate text-sm font-bold text-foreground">
-              {platformName}
-            </span>
-          </Link>
+          <BrandMark
+            href="/admin"
+            name={platformName}
+            logoUrl={logoUrl}
+            subtitle="Centro operacional"
+            compact
+            className="max-w-[14rem]"
+          />
           <button
             type="button"
-            className="inline-flex size-10 items-center justify-center rounded-lg border border-white/10 bg-white/[0.06]"
+            className="inline-flex size-10 items-center justify-center rounded-[var(--radius-sm)] border border-border/80 bg-card/80"
             aria-label="Abrir menu administrativo"
             onClick={() => setOpen((current) => !current)}
           >
@@ -95,6 +88,11 @@ export function AdminSidebar({
         </div>
         {open ? (
           <div className="mt-4 space-y-3">
+            <Alert
+              tone="warning"
+              title="Area administrativa"
+              description="Use este painel para operacao do tenant, campanhas e configuracoes da plataforma."
+            />
             <AdminNavLinks onNavigate={() => setOpen(false)} />
             <form action={signOut}>
               <button
@@ -112,36 +110,41 @@ export function AdminSidebar({
         ) : null}
       </div>
 
-      <aside className="fixed inset-y-0 left-0 hidden w-72 border-r border-white/10 bg-surface/92 p-5 backdrop-blur-xl lg:block">
-        <Link href="/admin" className="flex items-center gap-3">
-          <span className="relative flex size-11 items-center justify-center overflow-hidden rounded-lg border border-accent/30 bg-accent/15 text-accent">
-            {logoUrl ? (
-              <Image
-                src={logoUrl}
-                alt={`Logo ${platformName}`}
-                fill
-                className="object-contain p-1"
-                sizes="44px"
-              />
-            ) : (
-              <Ticket className="size-5" />
-            )}
-          </span>
-          <span>
-            <span className="block max-w-44 truncate text-xs font-semibold text-accent">
-              {platformName}
-            </span>
-            <span className="text-base font-bold text-foreground">
-              Painel SaaS
-            </span>
-          </span>
-        </Link>
+      <aside className="fixed inset-y-0 left-0 hidden w-72 border-r border-border/80 bg-sidebar/94 p-5 backdrop-blur-xl lg:block">
+        <BrandMark
+          href="/admin"
+          name={platformName}
+          logoUrl={logoUrl}
+          subtitle="Painel SaaS"
+          className="max-w-[14rem]"
+        />
 
         <div className="mt-8">
           <AdminNavLinks />
         </div>
 
         <div className="absolute inset-x-5 bottom-5 space-y-3">
+          <Alert
+            tone="warning"
+            title="Operacao protegida"
+            description="A shell administrativa usa gate server-side por tenant antes de renderizar qualquer pagina do painel."
+          />
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-[var(--radius-md)] border border-border/80 bg-card/72 p-3">
+              <ChartColumnBig className="size-4 text-primary" />
+              <p className="mt-3 text-xs font-semibold uppercase tracking-[0.16em] text-muted">
+                Escopo
+              </p>
+              <p className="mt-1 text-sm font-semibold text-foreground">Tenant atual</p>
+            </div>
+            <div className="rounded-[var(--radius-md)] border border-border/80 bg-card/72 p-3">
+              <PanelTop className="size-4 text-accent" />
+              <p className="mt-3 text-xs font-semibold uppercase tracking-[0.16em] text-muted">
+                Contexto
+              </p>
+              <p className="mt-1 text-sm font-semibold text-foreground">Painel ativo</p>
+            </div>
+          </div>
           <form action={signOut}>
             <button
               type="submit"
@@ -154,7 +157,7 @@ export function AdminSidebar({
               Sair
             </button>
           </form>
-          <div className="rounded-lg border border-primary/20 bg-primary/10 p-4">
+          <div className="rounded-[var(--radius-md)] border border-primary/20 bg-primary/10 p-4">
             <ShieldCheck className="size-5 text-primary" />
             <p className="mt-3 text-sm font-semibold text-foreground">
               Admin protegido

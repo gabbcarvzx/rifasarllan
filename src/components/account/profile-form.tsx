@@ -1,10 +1,11 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { AlertCircle, CheckCircle2, Pencil, Save, X } from "lucide-react";
+import { Pencil, Save, X } from "lucide-react";
 import {
   updateMyProfile,
 } from "@/app/actions/account";
+import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -75,21 +76,15 @@ export function ProfileForm({ profile }: { profile: MyProfile }) {
         </label>
 
         {state.status !== "idle" ? (
-          <div
-            className={cn(
-              "flex items-start gap-2 rounded-lg border p-3 text-sm",
+          <Alert
+            tone={state.status === "success" ? "success" : "danger"}
+            title={
               state.status === "success"
-                ? "border-primary/30 bg-primary/10 text-emerald-100"
-                : "border-danger/30 bg-danger/10 text-rose-100",
-            )}
-          >
-            {state.status === "success" ? (
-              <CheckCircle2 className="mt-0.5 size-4 shrink-0" />
-            ) : (
-              <AlertCircle className="mt-0.5 size-4 shrink-0" />
-            )}
-            {state.message}
-          </div>
+                ? "Perfil atualizado"
+                : "Nao foi possivel salvar agora"
+            }
+            description={state.message}
+          />
         ) : null}
 
         <Button type="submit" isLoading={isPending} className="w-full sm:w-fit">

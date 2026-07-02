@@ -2,15 +2,15 @@
 
 import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Info, Loader2, RotateCcw, ShieldCheck } from "lucide-react";
+import { CheckCircle2, Info, Loader2, RotateCcw, ShoppingCart } from "lucide-react";
 import {
   reserveNumbers,
   type ReservationActionState,
 } from "@/app/actions/reservations";
+import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatCurrency } from "@/lib/format";
-import { cn } from "@/lib/utils";
 
 const initialState: ReservationActionState = {
   status: "idle",
@@ -57,7 +57,7 @@ export function SelectionSummary({
   return (
     <form
       action={formAction}
-      className="sticky bottom-3 z-20 rounded-lg border border-primary/20 bg-black/85 p-4 shadow-2xl shadow-black/30 backdrop-blur xl:bottom-auto xl:shadow-none"
+      className="sticky bottom-2 z-30 rounded-[var(--radius-lg)] border border-primary/20 bg-sidebar/94 p-4 shadow-2xl shadow-black/30 backdrop-blur xl:bottom-auto xl:shadow-none"
     >
       <input type="hidden" name="raffleId" value={raffleId} />
       <input type="hidden" name="raffleSlug" value={raffleSlug} />
@@ -66,12 +66,11 @@ export function SelectionSummary({
       <div className="flex items-start justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-            <ShieldCheck className="size-4 text-primary" />
-            Resumo da selecao
+            <ShoppingCart className="size-4 text-primary" />
+            Resumo da compra
           </div>
           <p className="mt-1 text-xs leading-5 text-muted">
-            Confirme seus dados para bloquear os numeros por 15 minutos e criar
-            o pedido na sua conta.
+            Preencha seus dados e bloqueie os numeros por 15 minutos para seguir com a participacao.
           </p>
         </div>
         <span className="rounded-full border border-primary/25 bg-primary/12 px-3 py-1 text-xs font-semibold text-emerald-100">
@@ -80,13 +79,13 @@ export function SelectionSummary({
       </div>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <div className="rounded-lg border border-white/10 bg-white/[0.04] p-3">
+        <div className="rounded-[var(--radius-md)] border border-border/80 bg-card/72 p-3">
           <p className="text-xs uppercase tracking-[0.14em] text-muted">
             Quantidade
           </p>
           <p className="mt-1 text-2xl font-bold text-foreground">{quantity}</p>
         </div>
-        <div className="rounded-lg border border-white/10 bg-white/[0.04] p-3">
+        <div className="rounded-[var(--radius-md)] border border-border/80 bg-card/72 p-3">
           <p className="text-xs uppercase tracking-[0.14em] text-muted">
             Total estimado
           </p>
@@ -96,7 +95,7 @@ export function SelectionSummary({
         </div>
       </div>
 
-      <div className="mt-4 min-h-16 rounded-lg border border-white/10 bg-white/[0.03] p-3">
+      <div className="mt-4 min-h-16 rounded-[var(--radius-md)] border border-border/80 bg-card/65 p-3">
         {quantity > 0 ? (
           <div className="flex flex-wrap gap-2">
             {previewNumbers.map((number) => (
@@ -116,10 +115,17 @@ export function SelectionSummary({
         ) : (
           <div className="flex items-center gap-2 text-sm text-muted">
             <Info className="size-4 text-accent" />
-            Nenhum numero selecionado ainda.
+            Nenhum numero selecionado ainda. Toque nos numeros disponiveis para montar sua compra.
           </div>
         )}
       </div>
+
+      <Alert
+        tone="success"
+        title="Participacao guiada"
+        description="Ao reservar, o pedido fica vinculado a sua conta para acompanhamento posterior."
+        className="mt-4"
+      />
 
       <div className="mt-4 grid gap-3">
         <label className="grid gap-2 text-sm font-medium text-foreground">
@@ -153,13 +159,22 @@ export function SelectionSummary({
       </div>
 
       {state.status === "error" && state.message ? (
-        <div
-          className={cn(
-            "mt-4 rounded-lg border p-3 text-sm leading-6",
-            "border-danger/35 bg-danger/12 text-rose-100",
-          )}
-        >
-          {state.message}
+        <Alert
+          tone="danger"
+          title="Nao foi possivel reservar agora"
+          description={state.message}
+          className="mt-4"
+        />
+      ) : null}
+
+      {quantity > 0 ? (
+        <div className="mt-4 rounded-[var(--radius-md)] border border-success/25 bg-success/10 p-3">
+          <div className="flex items-start gap-2 text-sm text-success-foreground">
+            <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-success" />
+            <p>
+              Seus numeros ficam reservados por tempo limitado para reduzir disputa e ajudar voce a concluir a compra sem correria.
+            </p>
+          </div>
         </div>
       ) : null}
 
@@ -176,7 +191,7 @@ export function SelectionSummary({
         </Button>
         <Button type="submit" disabled={quantity === 0 || isPending} className="w-full">
           {isPending ? <Loader2 className="size-4 animate-spin" /> : null}
-          {isPending ? "Reservando..." : "Reservar agora"}
+          {isPending ? "Reservando..." : "Continuar para reserva"}
         </Button>
       </div>
     </form>

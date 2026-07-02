@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { AlertCircle } from "lucide-react";
 import { getMyNumbers, getMyProfile } from "@/app/actions/account";
 import { AccountLayout } from "@/components/account/account-layout";
 import {
   MyNumbersList,
   type NumberFilter,
 } from "@/components/account/my-numbers-list";
+import { Alert } from "@/components/ui/alert";
+import { StatCard } from "@/components/ui/stat-card";
+import { getAccountNumberMetrics } from "@/lib/account/dashboard-metrics";
 
 export const metadata: Metadata = {
   title: "Meus Numeros",
@@ -43,17 +45,44 @@ export default async function MeusNumerosPage({
     redirect("/login?error=Perfil%20nao%20encontrado.");
   }
 
+  const metrics = getAccountNumberMetrics(numbersResult.data);
+
   return (
     <AccountLayout
       profile={profileResult.data}
       title="Meus numeros"
       description="Consulte seus numeros por rifa e filtre rapidamente entre reservas, pagamentos e historico inativo."
     >
+      <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <StatCard
+          label="Numeros totais"
+          value={String(metrics.totalNumbers)}
+          hint={`${metrics.campaignsWithNumbers} campanha(s) no seu historico`}
+        />
+        <StatCard
+          label="Confirmados"
+          value={String(metrics.paidNumbers)}
+          hint="Numeros com pagamento identificado"
+        />
+        <StatCard
+          label="Em reserva"
+          value={String(metrics.reservedNumbers)}
+          hint="Dependem de conclusao do pagamento"
+        />
+        <StatCard
+          label="Campanhas ativas"
+          value={String(metrics.activeCampaigns)}
+          hint="Rifas onde voce ainda pode ampliar participacao"
+        />
+      </div>
+
       {numbersResult.error ? (
-        <div className="mb-4 flex items-start gap-3 rounded-lg border border-accent/30 bg-accent/10 p-4 text-sm text-amber-100">
-          <AlertCircle className="mt-0.5 size-4 shrink-0" />
-          {numbersResult.error}
-        </div>
+        <Alert
+          tone="warning"
+          title="Nao foi possivel carregar todos os numeros"
+          description={numbersResult.error}
+          className="mb-4"
+        />
       ) : null}
       <MyNumbersList groups={numbersResult.data} filter={filter} />
     </AccountLayout>

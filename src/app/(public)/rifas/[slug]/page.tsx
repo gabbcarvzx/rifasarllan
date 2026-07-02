@@ -5,8 +5,11 @@ import {
   ArrowDown,
   CalendarDays,
   CircleCheck,
+  Clock3,
   ExternalLink,
+  LockKeyhole,
   Radio,
+  ScrollText,
   ShieldCheck,
   Ticket,
   Trophy,
@@ -25,14 +28,18 @@ import { NumberGrid } from "@/components/raffles/number-grid";
 import { PublicRaffleGallery } from "@/components/raffles/public-raffle-gallery";
 import { PublicPrizesSection } from "@/components/raffles/public-prizes-section";
 import { ShareRaffleButton } from "@/components/raffles/share-raffle-button";
+import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { SectionHeading } from "@/components/ui/section-heading";
+import { StatCard } from "@/components/ui/stat-card";
 import {
   getAuthContext,
   hasSupabaseSessionCookie,
 } from "@/lib/auth/session";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { getPublicCampaignMetrics } from "@/lib/raffles/public-campaign-metrics";
 import { getPublicPlatformSettings } from "@/lib/platform-settings/public";
 import { getPublicRaffleBySlug } from "@/lib/raffles/public-queries";
 import { buildRaffleShareText } from "@/lib/sharing/raffle";
@@ -48,27 +55,68 @@ export async function generateMetadata({
 }: RifaPageProps): Promise<Metadata> {
   const { slug } = await params;
   const raffle = await getPublicRaffleBySlug(slug);
+  const title = raffle ? raffle.title : "Rifa";
+  const description = raffle?.short_description ?? raffle?.description ?? undefined;
 
   return {
-    title: raffle ? raffle.title : "Rifa",
-    description: raffle?.short_description ?? undefined,
+    title,
+    description,
+    openGraph: raffle
+      ? {
+          type: "article",
+          title,
+          description,
+          images: raffle.main_image_url ? [{ url: raffle.main_image_url }] : undefined,
+        }
+      : undefined,
+    twitter: raffle
+      ? {
+          card: "summary_large_image",
+          title,
+          description,
+          images: raffle.main_image_url ? [raffle.main_image_url] : undefined,
+        }
+      : undefined,
   };
 }
 
 const participationSteps = [
   {
-    title: "Escolha seus numeros",
-    description: "Use filtros e busca para montar sua selecao na grade.",
+    title: "Defina a quantidade ideal",
+    description: "Use atalhos de quantidade ou escolha numero por numero na grade.",
+  },
+  {
+    title: "Monte sua selecao",
+    description: "A interface destaca disponiveis, reservados e vendidos para evitar confusao.",
   },
   {
     title: "Confirme seus dados",
-    description: "Entre na sua conta e reserve os numeros por 15 minutos.",
-  },
-  {
-    title: "Acompanhe pela conta",
-    description: "Consulte pedido, prazo e situacao dos numeros reservados.",
+    description: "A reserva fica vinculada a sua conta para acompanhamento do pedido.",
   },
 ] as const;
+
+const campaignFaqs = [
+  {
+    question: "Preciso escolher todos os numeros manualmente?",
+    answer:
+      "Nao. A campanha oferece atalhos de quantidade e escolha automatica para acelerar a participacao sem alterar as regras da reserva.",
+  },
+  {
+    question: "Os numeros ficam reservados por quanto tempo?",
+    answer:
+      "Depois da confirmacao dos seus dados, a reserva segue o prazo configurado pela plataforma, mantendo o pedido vinculado a sua conta.",
+  },
+  {
+    question: "Consigo revisar meus numeros antes de continuar?",
+    answer:
+      "Sim. O resumo da compra atualiza em tempo real e mostra quantidade, total estimado e os numeros selecionados.",
+  },
+  {
+    question: "Onde vejo o regulamento da campanha?",
+    answer:
+      "O regulamento fica na propria pagina da campanha, junto da descricao e das informacoes de confianca da participacao.",
+  },
+];
 
 export default async function RifaDetalhePage({ params }: RifaPageProps) {
   const { slug } = await params;
@@ -106,6 +154,7 @@ export default async function RifaDetalhePage({ params }: RifaPageProps) {
       draw_date: raffle.draw_date,
     }),
   ]);
+
   const customerDefaults = {
     name:
       authContext.profile?.full_name ??
@@ -119,6 +168,7 @@ export default async function RifaDetalhePage({ params }: RifaPageProps) {
         ? authContext.user.user_metadata.phone
         : ""),
   };
+
   const shareText = buildRaffleShareText({
     platformName: settings.platform_name,
     raffleTitle: raffle.title,
@@ -126,6 +176,12 @@ export default async function RifaDetalhePage({ params }: RifaPageProps) {
     drawDateLabel: formatDate(raffle.draw_date),
   });
   const hasPublishedResult = Boolean(result.data?.published);
+  const metrics = getPublicCampaignMetrics({
+    totalNumbers: raffle.total_numbers,
+    available: raffleNumberStats.available,
+    reserved: raffleNumberStats.reserved,
+    paid: raffleNumberStats.paid,
+  });
 
   return (
     <section className="bg-surface/30 px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
@@ -139,7 +195,7 @@ export default async function RifaDetalhePage({ params }: RifaPageProps) {
             statusBadge={<RaffleStatusBadge status={raffle.status} />}
           />
 
-          <Card className="p-5 sm:p-6 lg:sticky lg:top-24">
+          <Card className="overflow-hidden p-5 sm:p-6 lg:sticky lg:top-24">
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant="success">Participacao aberta</Badge>
               {raffle.featured ? <Badge variant="default">Destaque</Badge> : null}
@@ -151,27 +207,67 @@ export default async function RifaDetalhePage({ params }: RifaPageProps) {
               {raffle.short_description}
             </p>
 
-            <div className="mt-6 grid grid-cols-3 gap-2">
-              <div className="rounded-lg border border-primary/20 bg-primary/[0.07] p-3">
-                <Ticket className="size-4 text-primary" />
-                <p className="mt-3 text-xs text-muted">Por numero</p>
-                <p className="mt-1 text-sm font-bold text-foreground sm:text-base">
-                  {formatCurrency(raffle.price_per_number)}
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              <StatCard
+                label="Por numero"
+                value={formatCurrency(raffle.price_per_number)}
+                hint="Valor unitario da participacao"
+                icon={Ticket}
+              />
+              <StatCard
+                label="Sorteio"
+                value={formatDate(raffle.draw_date)}
+                hint="Data prevista da campanha"
+                icon={CalendarDays}
+              />
+              <StatCard
+                label="Restantes"
+                value={metrics.remaining.toLocaleString("pt-BR")}
+                hint="Quanto antes escolher, menos disputa"
+                icon={Clock3}
+              />
+              <StatCard
+                label="Ja escolhidos"
+                value={metrics.occupied.toLocaleString("pt-BR")}
+                hint="Numeros reservados ou vendidos"
+                icon={UserCheck}
+              />
+            </div>
+
+            <div className="mt-5 rounded-[var(--radius-lg)] border border-primary/20 bg-primary/[0.06] p-4">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm font-semibold text-foreground">
+                  Andamento da campanha
                 </p>
+                <span className="text-sm font-semibold text-accent">
+                  {Math.round(metrics.progress * 100)}% ocupado
+                </span>
               </div>
-              <div className="rounded-lg border border-accent/20 bg-accent/[0.07] p-3">
-                <CalendarDays className="size-4 text-accent" />
-                <p className="mt-3 text-xs text-muted">Sorteio</p>
-                <p className="mt-1 text-sm font-bold text-foreground">
-                  {formatDate(raffle.draw_date)}
-                </p>
+              <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/[0.08]">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-primary via-info to-accent"
+                  style={{ width: `${Math.min(metrics.progress * 100, 100)}%` }}
+                />
               </div>
-              <div className="rounded-lg border border-info/20 bg-info/[0.07] p-3">
-                <ShieldCheck className="size-4 text-info" />
-                <p className="mt-3 text-xs text-muted">Numeros</p>
-                <p className="mt-1 text-sm font-bold text-foreground sm:text-base">
-                  {raffle.total_numbers.toLocaleString("pt-BR")}
-                </p>
+              <div className="mt-3 grid grid-cols-3 gap-2 text-sm">
+                <div>
+                  <p className="text-muted">Vendidos</p>
+                  <p className="font-semibold text-foreground">
+                    {metrics.sold.toLocaleString("pt-BR")}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-muted">Reservados</p>
+                  <p className="font-semibold text-foreground">
+                    {metrics.reserved.toLocaleString("pt-BR")}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-muted">Disponiveis</p>
+                  <p className="font-semibold text-foreground">
+                    {metrics.available.toLocaleString("pt-BR")}
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -201,34 +297,34 @@ export default async function RifaDetalhePage({ params }: RifaPageProps) {
               </Link>
             ) : null}
 
-            <div className="mt-5 flex items-start gap-3 border-t border-white/10 pt-5">
-              <CircleCheck className="mt-0.5 size-4 shrink-0 text-primary" />
-              <p className="text-xs leading-5 text-muted">
-                Selecao visual, reserva vinculada a sua conta e resultado
-                publicado pelo organizador depois da live.
-              </p>
-            </div>
+            <Alert
+              tone="success"
+              title="Compra orientada para reduzir abandono"
+              description="Tudo o que voce precisa para participar esta nesta pagina: premio, regras, disponibilidade, selecao e resumo da compra."
+              className="mt-5"
+            />
           </Card>
         </div>
 
         <PublicPrizesSection prizes={prizes} />
 
         <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
-          <section className="rounded-lg border border-white/10 bg-black/14 p-5 sm:p-6">
-            <Badge variant="info">Como participar</Badge>
-            <h2 className="mt-4 text-2xl font-bold text-foreground">
-              Da escolha ao acompanhamento
-            </h2>
+          <section className="rounded-[var(--radius-lg)] border border-border/80 bg-card/78 p-5 sm:p-6">
+            <SectionHeading
+              eyebrow="Como comprar"
+              title="Da escolha ao pedido sem confusao."
+              description="Cada etapa foi reorganizada para ajudar quem quer decidir mais rapido no mobile e no desktop."
+            />
             <div className="mt-6 grid gap-5 sm:grid-cols-3">
               {participationSteps.map((step, index) => (
                 <div key={step.title}>
-                  <span className="flex size-8 items-center justify-center rounded-lg border border-primary/25 bg-primary/12 font-mono text-xs font-bold text-primary">
+                  <span className="flex size-9 items-center justify-center rounded-[var(--radius-sm)] border border-primary/25 bg-primary/12 font-mono text-xs font-bold text-primary">
                     {index + 1}
                   </span>
                   <h3 className="mt-3 text-sm font-semibold text-foreground">
                     {step.title}
                   </h3>
-                  <p className="mt-2 text-xs leading-5 text-muted">
+                  <p className="mt-2 text-xs leading-6 text-muted">
                     {step.description}
                   </p>
                 </div>
@@ -236,15 +332,13 @@ export default async function RifaDetalhePage({ params }: RifaPageProps) {
             </div>
           </section>
 
-          <section className="rounded-lg border border-accent/20 bg-accent/[0.06] p-5 sm:p-6">
+          <section className="rounded-[var(--radius-lg)] border border-accent/20 bg-accent/[0.06] p-5 sm:p-6">
             <Radio className="size-5 text-accent" />
             <h2 className="mt-4 text-xl font-bold text-foreground">
-              Sorteio ao vivo no Instagram
+              Sorteio ao vivo e resultado publicado
             </h2>
             <p className="mt-3 text-sm leading-7 text-muted">
-              A apuracao e realizada externamente pelo organizador. Depois da
-              live, os vencedores e links de comprovacao podem ser publicados
-              nesta plataforma.
+              A apuracao e feita externamente pelo organizador. Quando disponivel, a plataforma exibe resultado, links da live e comprovacoes para reforcar a transparencia.
             </p>
             {settings.instagram_url ? (
               <a
@@ -265,20 +359,26 @@ export default async function RifaDetalhePage({ params }: RifaPageProps) {
 
         <div className="grid gap-5 lg:grid-cols-2">
           <Card className="p-5 sm:p-6">
-            <h2 className="text-xl font-bold text-foreground">Sobre a rifa</h2>
+            <div className="flex items-center gap-2">
+              <ScrollText className="size-5 text-accent" />
+              <h2 className="text-xl font-bold text-foreground">Sobre a campanha</h2>
+            </div>
             <p className="mt-3 whitespace-pre-line text-sm leading-7 text-muted">
               {raffle.description || "Os detalhes completos serao publicados pelo organizador."}
             </p>
           </Card>
           <Card className="p-5 sm:p-6">
-            <h2 className="text-xl font-bold text-foreground">Regras</h2>
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="size-5 text-primary" />
+              <h2 className="text-xl font-bold text-foreground">Regulamento</h2>
+            </div>
             <p className="mt-3 whitespace-pre-line text-sm leading-7 text-muted">
               {raffle.rules || "Consulte o organizador para confirmar as regras desta campanha."}
             </p>
           </Card>
         </div>
 
-        <section className="grid gap-4 border-y border-white/10 py-6 sm:grid-cols-3">
+        <section className="grid gap-4 border-y border-border/80 py-6 sm:grid-cols-3">
           <div className="flex items-start gap-3">
             <ShieldCheck className="mt-0.5 size-5 shrink-0 text-primary" />
             <div>
@@ -286,32 +386,41 @@ export default async function RifaDetalhePage({ params }: RifaPageProps) {
                 Numeros rastreaveis
               </h2>
               <p className="mt-1 text-xs leading-5 text-muted">
-                A grade mostra disponibilidade, reservas e numeros vendidos.
+                A grade mostra disponibilidade, reservas e numeros vendidos para evitar erro na escolha.
               </p>
             </div>
           </div>
           <div className="flex items-start gap-3">
-            <UserCheck className="mt-0.5 size-5 shrink-0 text-info" />
+            <LockKeyhole className="mt-0.5 size-5 shrink-0 text-info" />
             <div>
               <h2 className="text-sm font-semibold text-foreground">
-                Historico na conta
+                Pedido vinculado a conta
               </h2>
               <p className="mt-1 text-xs leading-5 text-muted">
-                Pedidos e numeros ficam organizados para o participante.
+                Sua reserva fica ligada ao seu acesso para acompanhamento posterior na area do participante.
               </p>
             </div>
           </div>
           <div className="flex items-start gap-3">
-            <Trophy className="mt-0.5 size-5 shrink-0 text-accent" />
+            <CircleCheck className="mt-0.5 size-5 shrink-0 text-accent" />
             <div>
               <h2 className="text-sm font-semibold text-foreground">
-                Resultado transparente
+                Compra mais clara
               </h2>
               <p className="mt-1 text-xs leading-5 text-muted">
-                O organizador publica vencedores e evidencias da live.
+                O resumo acompanha a selecao em tempo real para reduzir abandono antes da reserva.
               </p>
             </div>
           </div>
+        </section>
+
+        <section className="grid gap-4 lg:grid-cols-2">
+          {campaignFaqs.map((faq) => (
+            <Card key={faq.question} className="p-5 sm:p-6">
+              <h2 className="text-lg font-semibold text-foreground">{faq.question}</h2>
+              <p className="mt-3 text-sm leading-7 text-muted">{faq.answer}</p>
+            </Card>
+          ))}
         </section>
 
         <div id="escolher-numeros" className="scroll-mt-24">

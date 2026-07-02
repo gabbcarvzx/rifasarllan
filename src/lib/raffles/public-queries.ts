@@ -4,6 +4,7 @@ import { CACHE_TAGS } from "@/lib/cache-tags";
 import { isSupabaseConfigured } from "@/lib/env/public";
 import { getPublicTenantId } from "@/lib/platform-settings/public";
 import { createSupabasePublicClient } from "@/lib/supabase/public";
+import { getPublicCampaignMetrics, type PublicCampaignMetrics } from "@/lib/raffles/public-campaign-metrics";
 import type { Raffle, RafflePrize } from "@/types/database";
 
 export type PublicPrizeSummary = {
@@ -14,6 +15,7 @@ export type PublicPrizeSummary = {
 export type PublicRaffleCatalog = {
   raffles: Raffle[];
   prizeSummaries: Record<string, PublicPrizeSummary>;
+  metricsByRaffleId: Record<string, PublicCampaignMetrics>;
 };
 
 type RaffleWithPrizes = Raffle & {
@@ -41,7 +43,7 @@ const loadPublicRaffleCatalog = unstable_cache(
 
     const { data, error } = await query;
 
-    if (error) return { raffles: [], prizeSummaries: {} };
+    if (error) return { raffles: [], prizeSummaries: {}, metricsByRaffleId: {} };
 
     const rows = (data ?? []) as unknown as RaffleWithPrizes[];
     const prizeSummaries = rows.reduce<Record<string, PublicPrizeSummary>>(
@@ -58,6 +60,38 @@ const loadPublicRaffleCatalog = unstable_cache(
       },
       {},
     );
+    const metricsEntries = await Promise.all(
+      rows.map(async (row) => {
+        const [availableCount, reservedCount, paidCount] = await Promise.all([
+          supabase
+            .from("public_raffle_numbers")
+            .select("number", { count: "exact", head: true })
+            .eq("raffle_id", row.id)
+            .eq("status", "available"),
+          supabase
+            .from("public_raffle_numbers")
+            .select("number", { count: "exact", head: true })
+            .eq("raffle_id", row.id)
+            .eq("status", "reserved"),
+          supabase
+            .from("public_raffle_numbers")
+            .select("number", { count: "exact", head: true })
+            .eq("raffle_id", row.id)
+            .eq("status", "paid"),
+        ]);
+
+        return [
+          row.id,
+          getPublicCampaignMetrics({
+            totalNumbers: row.total_numbers,
+            available: availableCount.count ?? 0,
+            reserved: reservedCount.count ?? 0,
+            paid: paidCount.count ?? 0,
+          }),
+        ] as const;
+      }),
+    );
+    const metricsByRaffleId = Object.fromEntries(metricsEntries);
 
     return {
       raffles: rows.map((row) => {
@@ -66,6 +100,7 @@ const loadPublicRaffleCatalog = unstable_cache(
         return raffle as Raffle;
       }),
       prizeSummaries,
+      metricsByRaffleId,
     };
   },
   ["public-raffle-catalog"],
@@ -98,8 +133,8 @@ export async function getPublicRaffleCatalog(options?: {
 }): Promise<PublicRaffleCatalog> {
   const tenantId = await getPublicTenantId();
 
-  if (!tenantId || !isSupabaseConfigured()) {
-    return { raffles: [], prizeSummaries: {} };
+    if (!tenantId || !isSupabaseConfigured()) {
+    return { raffles: [], prizeSummaries: {}, metricsByRaffleId: {} };
   }
 
   return loadPublicRaffleCatalog(

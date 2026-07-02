@@ -3,6 +3,8 @@ import { ArrowUpRight, CalendarDays } from "lucide-react";
 import { RaffleStatusBadge } from "@/components/admin/raffles/raffle-status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { SectionHeading } from "@/components/ui/section-heading";
 import { formatDate } from "@/lib/format";
 import type { AdminRaffleAnalytics } from "@/types/dashboard";
 
@@ -16,15 +18,17 @@ export function UpcomingDraws({
       <div className="flex items-start justify-between gap-4">
         <div>
           <Badge variant="info">Agenda</Badge>
-          <h2 className="mt-3 text-xl font-bold text-foreground">
-            Proximos sorteios
-          </h2>
+          <SectionHeading
+            title="Proximos sorteios"
+            description="Campanhas que exigem acompanhamento mais proximo de prazo e ocupacao."
+            className="mt-3"
+          />
         </div>
         <CalendarDays className="size-5 text-info" />
       </div>
 
       {raffles.length > 0 ? (
-        <div className="mt-5 divide-y divide-white/10">
+        <div className="mt-5 divide-y divide-border/80">
           {raffles.map((raffle) => (
             <div
               key={raffle.id}
@@ -45,7 +49,7 @@ export function UpcomingDraws({
               <Link
                 href={`/admin/rifas/${raffle.id}/editar`}
                 aria-label={`Abrir ${raffle.title}`}
-                className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-white/10 text-muted transition hover:border-primary/35 hover:text-foreground"
+                className="flex size-9 shrink-0 items-center justify-center rounded-[var(--radius-sm)] border border-border/80 text-muted transition hover:border-primary/35 hover:text-foreground"
               >
                 <ArrowUpRight className="size-4" />
               </Link>
@@ -53,11 +57,12 @@ export function UpcomingDraws({
           ))}
         </div>
       ) : (
-        <div className="mt-5 rounded-lg border border-dashed border-white/15 bg-white/[0.03] p-6 text-center">
-          <p className="font-semibold text-foreground">Agenda livre</p>
-          <p className="mt-2 text-sm leading-6 text-muted">
-            Nenhuma campanha ativa ou pausada possui sorteio futuro.
-          </p>
+        <div className="mt-5">
+          <EmptyState
+            title="Agenda livre"
+            description="Nenhuma campanha ativa ou pausada possui sorteio futuro."
+            className="min-h-44"
+          />
         </div>
       )}
     </Card>

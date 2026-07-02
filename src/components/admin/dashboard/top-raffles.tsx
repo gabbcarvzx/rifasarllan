@@ -2,6 +2,8 @@ import Link from "next/link";
 import { ArrowUpRight, Trophy } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { SectionHeading } from "@/components/ui/section-heading";
 import type { AdminRaffleAnalytics } from "@/types/dashboard";
 
 export function TopRaffles({ raffles }: { raffles: AdminRaffleAnalytics[] }) {
@@ -10,9 +12,11 @@ export function TopRaffles({ raffles }: { raffles: AdminRaffleAnalytics[] }) {
       <div className="flex items-start justify-between gap-4">
         <div>
           <Badge variant="success">Ranking</Badge>
-          <h2 className="mt-3 text-xl font-bold text-foreground">
-            Top rifas por ocupacao
-          </h2>
+          <SectionHeading
+            title="Top rifas por ocupacao"
+            description="Campanhas com melhor tracao visual e comercial dentro do tenant."
+            className="mt-3"
+          />
         </div>
         <Trophy className="size-5 text-accent" />
       </div>
@@ -62,9 +66,11 @@ export function TopRaffles({ raffles }: { raffles: AdminRaffleAnalytics[] }) {
         })}
 
         {raffles.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-white/15 bg-white/[0.03] p-6 text-center text-sm text-muted">
-            O ranking aparecera quando houver rifas cadastradas.
-          </div>
+          <EmptyState
+            title="Ranking indisponivel"
+            description="O ranking aparecera quando houver rifas cadastradas."
+            className="min-h-44"
+          />
         ) : null}
       </div>
     </Card>

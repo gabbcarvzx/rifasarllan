@@ -49,11 +49,11 @@ export function Modal({
     >
       <div
         className={cn(
-          "w-full max-w-lg rounded-lg border border-white/10 bg-surface-raised shadow-premium",
+          "w-full max-w-lg rounded-[var(--radius-lg)] border border-border/85 bg-card text-card-foreground shadow-premium",
           className,
         )}
       >
-        <div className="flex items-start justify-between gap-4 border-b border-white/10 p-5">
+        <div className="flex items-start justify-between gap-4 border-b border-border/80 p-5 sm:p-6">
           <div>
             <h2 id="modal-title" className="text-lg font-semibold text-foreground">
               {title}
@@ -72,7 +72,7 @@ export function Modal({
             <X className="size-4" />
           </Button>
         </div>
-        <div className="p-5">{children}</div>
+        <div className="p-5 sm:p-6">{children}</div>
       </div>
     </div>
   );

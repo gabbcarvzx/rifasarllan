@@ -13,7 +13,7 @@ export function LoadingState({
   return (
     <div
       className={cn(
-        "flex min-h-56 flex-col items-center justify-center gap-3 rounded-lg border border-white/10 bg-white/[0.04] text-muted",
+        "flex min-h-56 flex-col items-center justify-center gap-3 rounded-[var(--radius-md)] border border-border/80 bg-card/72 text-muted",
         className,
       )}
     >

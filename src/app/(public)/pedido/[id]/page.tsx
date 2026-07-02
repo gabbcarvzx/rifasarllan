@@ -6,6 +6,7 @@ import {
   ArrowLeft,
   CalendarDays,
   Hash,
+  Info,
   Mail,
   Phone,
   UserCircle,
@@ -15,9 +16,12 @@ import { AccountLayout } from "@/components/account/account-layout";
 import { ParticipantPaymentCard } from "@/components/account/participant-payment-card";
 import { ImagePlaceholder } from "@/components/media/image-placeholder";
 import { ReservationCountdown } from "@/components/raffles/reservation-countdown";
+import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { SectionHeading } from "@/components/ui/section-heading";
+import { StatCard } from "@/components/ui/stat-card";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import {
   orderStatusLabels,
@@ -66,6 +70,29 @@ export default async function PedidoPage({ params }: PedidoPageProps) {
           <ArrowLeft className="size-4" />
           Voltar para meus pedidos
         </Link>
+      </div>
+
+      <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <StatCard
+          label="Status"
+          value={orderStatusLabels[order.status]}
+          hint="Atualizado conforme a situacao do pedido"
+        />
+        <StatCard
+          label="Numeros"
+          value={String(items.length)}
+          hint="Quantidade vinculada a este pedido"
+        />
+        <StatCard
+          label="Valor"
+          value={formatCurrency(order.amount)}
+          hint="Total registrado no pedido"
+        />
+        <StatCard
+          label="Campanha"
+          value={raffle.status === "active" ? "Ativa" : "Historico"}
+          hint={raffleStatusLabels[raffle.status]}
+        />
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
@@ -128,12 +155,16 @@ export default async function PedidoPage({ params }: PedidoPageProps) {
           </Card>
 
           <Card className="p-5">
-            <h2 className="text-xl font-bold text-foreground">Numeros do pedido</h2>
+            <SectionHeading
+              eyebrow="Numeros vinculados"
+              title="Numeros deste pedido"
+              description="Use esta area para conferir rapidamente o que ficou reservado ou confirmado neste pedido."
+            />
             <div className="mt-4 flex flex-wrap gap-2">
               {items.map((item) => (
                 <span
                   key={item.id}
-                  className="rounded-lg border border-info/30 bg-info/12 px-3 py-2 font-mono text-sm font-bold text-sky-100"
+                  className="rounded-[var(--radius-sm)] border border-info/30 bg-info/12 px-3 py-2 font-mono text-sm font-bold text-sky-100"
                 >
                   {item.number}
                 </span>
@@ -142,7 +173,11 @@ export default async function PedidoPage({ params }: PedidoPageProps) {
           </Card>
 
           <Card className="p-5">
-            <h2 className="text-xl font-bold text-foreground">Dados da reserva</h2>
+            <SectionHeading
+              eyebrow="Dados protegidos"
+              title="Informacoes da reserva"
+              description="Esses dados vieram do momento da compra e ajudam voce a validar o pedido com seguranca."
+            />
             <div className="mt-4 grid gap-3 sm:grid-cols-3">
               <div className="flex min-w-0 items-center gap-3 rounded-lg border border-white/10 bg-black/18 p-3">
                 <UserCircle className="size-5 shrink-0 text-primary" />
@@ -164,6 +199,30 @@ export default async function PedidoPage({ params }: PedidoPageProps) {
               </div>
             </div>
           </Card>
+
+          <Alert
+            tone={order.status === "pending" ? "warning" : "info"}
+            title={
+              order.status === "pending"
+                ? "Finalize este pedido dentro do prazo"
+                : "Pedido salvo no seu historico"
+            }
+            description={
+              order.status === "pending"
+                ? "A reserva dos numeros depende da conclusao do pagamento antes do vencimento exibido nesta pagina."
+                : "Voce pode usar esta pagina para revisar numeros, status e comprovantes sempre que precisar."
+            }
+            action={
+              raffle.slug && raffle.status === "active" ? (
+                <Link
+                  href={`/rifas/${raffle.slug}`}
+                  className={buttonVariants({ size: "sm", variant: "secondary" })}
+                >
+                  Ver campanha novamente
+                </Link>
+              ) : null
+            }
+          />
         </div>
 
         <div className="space-y-6 xl:sticky xl:top-24 xl:self-start">
@@ -172,6 +231,19 @@ export default async function PedidoPage({ params }: PedidoPageProps) {
             status={order.status}
           />
           <ParticipantPaymentCard payment={payment} />
+          <Card className="p-5">
+            <div className="flex items-start gap-3">
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-[var(--radius-sm)] border border-info/30 bg-info/12 text-info">
+                <Info className="size-5" />
+              </div>
+              <div>
+                <h2 className="font-bold text-foreground">Area segura de consulta</h2>
+                <p className="mt-2 text-sm leading-6 text-muted">
+                  Este detalhe do pedido fica vinculado ao seu acesso autenticado e preserva o historico de numeros e pagamento sem expor outras contas.
+                </p>
+              </div>
+            </div>
+          </Card>
         </div>
       </div>
     </AccountLayout>

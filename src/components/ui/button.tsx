@@ -13,22 +13,21 @@ type ButtonVariantOptions = {
 
 const variants: Record<ButtonVariant, string> = {
   primary:
-    "border-primary/40 bg-primary text-primary-foreground shadow-premium hover:bg-primary/90",
+    "border-primary/45 bg-primary text-primary-foreground shadow-premium hover:border-primary/60 hover:bg-primary/90",
   secondary:
-    "border-white/10 bg-white/[0.07] text-foreground hover:border-accent/40 hover:bg-white/[0.11]",
+    "border-border/80 bg-secondary/14 text-foreground hover:border-secondary/45 hover:bg-secondary/20",
   outline:
-    "border-border bg-transparent text-foreground hover:border-primary/50 hover:bg-primary/10",
+    "border-border bg-transparent text-foreground hover:border-primary/45 hover:bg-primary/10",
   ghost:
-    "border-transparent bg-transparent text-muted hover:bg-white/[0.07] hover:text-foreground",
-  danger:
-    "border-danger/40 bg-danger/15 text-rose-100 hover:bg-danger/25",
+    "border-transparent bg-transparent text-muted hover:bg-card/80 hover:text-foreground",
+  danger: "border-danger/40 bg-danger/16 text-danger-foreground hover:bg-danger/22",
 };
 
 const sizes: Record<ButtonSize, string> = {
-  sm: "h-9 rounded-lg px-3 text-sm",
-  md: "h-11 rounded-lg px-4 text-sm",
-  lg: "h-12 rounded-lg px-5 text-base",
-  icon: "size-10 rounded-lg p-0",
+  sm: "h-9 rounded-[var(--radius-sm)] px-3 text-sm",
+  md: "h-11 rounded-[var(--radius-sm)] px-4 text-sm",
+  lg: "h-12 rounded-[var(--radius-md)] px-5 text-base",
+  icon: "size-10 rounded-[var(--radius-sm)] p-0",
 };
 
 export function buttonVariants({

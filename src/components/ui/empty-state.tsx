@@ -20,11 +20,11 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        "flex min-h-72 flex-col items-center justify-center rounded-lg border border-dashed border-white/15 bg-white/[0.03] p-8 text-center",
+        "flex min-h-72 flex-col items-center justify-center rounded-[var(--radius-md)] border border-dashed border-border/80 bg-card/60 p-8 text-center",
         className,
       )}
     >
-      <div className="mb-4 flex size-12 items-center justify-center rounded-lg border border-accent/30 bg-accent/15 text-accent">
+      <div className="mb-4 flex size-12 items-center justify-center rounded-[var(--radius-sm)] border border-accent/35 bg-accent/16 text-accent-foreground">
         <Icon className="size-5" />
       </div>
       <h3 className="text-lg font-semibold text-foreground">{title}</h3>

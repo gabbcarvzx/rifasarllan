@@ -1,6 +1,7 @@
 import { CircleDollarSign, Clock3, Target } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { SectionHeading } from "@/components/ui/section-heading";
 import { formatCurrency } from "@/lib/format";
 import type { AdminDashboardRevenue } from "@/types/dashboard";
 
@@ -55,15 +56,15 @@ export function RevenueOverview({
   return (
     <Card className="overflow-hidden">
       <div className="grid lg:grid-cols-[0.82fr_1.18fr]">
-        <div className="border-b border-white/10 p-5 lg:border-b-0 lg:border-r">
+        <div className="border-b border-border/80 p-5 lg:border-b-0 lg:border-r">
           <Badge variant="success">Visao de receita</Badge>
-          <p className="mt-5 text-sm font-medium text-muted">Potencial bruto</p>
+          <SectionHeading
+            title="Potencial bruto"
+            description="Capacidade total das campanhas cadastradas, considerando quantidade de numeros e preco unitario."
+            className="mt-4"
+          />
           <p className="mt-2 font-mono text-3xl font-bold text-foreground sm:text-4xl">
             {formatCurrency(revenue.potential)}
-          </p>
-          <p className="mt-3 max-w-md text-sm leading-6 text-muted">
-            Capacidade total das campanhas cadastradas, considerando quantidade
-            de numeros e preco unitario.
           </p>
         </div>
 
@@ -81,7 +82,7 @@ export function RevenueOverview({
             colorClass="bg-primary"
           />
 
-          <div className="grid gap-3 border-t border-white/10 pt-5 sm:grid-cols-3">
+          <div className="grid gap-3 border-t border-border/80 pt-5 sm:grid-cols-3">
             <div className="flex items-center gap-3">
               <Target className="size-4 text-info" />
               <div>

@@ -7,7 +7,7 @@ import type { MyNumber } from "@/types/account";
 
 export function MyNumberBadge({ entry }: { entry: MyNumber }) {
   return (
-    <div className="flex min-w-24 flex-col items-center gap-2 rounded-lg border border-white/10 bg-black/18 p-3">
+    <div className="flex min-w-24 flex-col items-center gap-2 rounded-[var(--radius-sm)] border border-border/80 bg-surface-raised/60 p-3 text-center transition hover:border-primary/30 hover:bg-primary/[0.08]">
       <span className="font-mono text-lg font-bold text-foreground">
         {entry.number}
       </span>
@@ -17,6 +17,9 @@ export function MyNumberBadge({ entry }: { entry: MyNumber }) {
       >
         {numberStatusLabels[entry.status]}
       </Badge>
+      <span className="text-[11px] font-medium text-muted">
+        Pedido {entry.orderId.slice(0, 8)}
+      </span>
     </div>
   );
 }

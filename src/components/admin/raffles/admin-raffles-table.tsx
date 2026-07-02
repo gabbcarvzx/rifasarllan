@@ -5,6 +5,7 @@ import { RaffleStatusBadge } from "@/components/admin/raffles/raffle-status-badg
 import { buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { SectionHeading } from "@/components/ui/section-heading";
 import { formatCurrency, formatDate } from "@/lib/format";
 import type { AdminRaffleAnalytics } from "@/types/dashboard";
 
@@ -31,7 +32,84 @@ export function AdminRafflesTable({
 
   return (
     <Card className="overflow-hidden">
-      <div className="overflow-x-auto">
+      <div className="border-b border-border/80 p-5">
+        <SectionHeading
+          eyebrow="Campanhas cadastradas"
+          title="Carteira de rifas"
+          description="Compare tracao, ocupacao, estrutura e potencial financeiro de cada campanha sem sair da area administrativa."
+        />
+      </div>
+
+      <div className="grid gap-4 p-4 lg:hidden">
+        {raffles.map((raffle) => {
+          const occupancy = Math.min(
+            100,
+            Math.max(0, raffle.occupancy_percentage),
+          );
+
+          return (
+            <div
+              key={raffle.id}
+              className="rounded-[var(--radius-sm)] border border-border/80 bg-surface-raised/55 p-4"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate font-semibold text-foreground">
+                    {raffle.title}
+                  </p>
+                  <p className="mt-1 font-mono text-xs text-muted">
+                    /{raffle.slug}
+                  </p>
+                </div>
+                <RaffleStatusBadge status={raffle.status} />
+              </div>
+
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.12em] text-muted">
+                    Ocupacao
+                  </p>
+                  <p className="mt-1 font-mono font-bold text-foreground">
+                    {occupancy.toLocaleString("pt-BR", {
+                      maximumFractionDigits: 1,
+                    })}
+                    %
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-[0.12em] text-muted">
+                    Potencial
+                  </p>
+                  <p className="mt-1 font-mono font-semibold text-accent">
+                    {formatCurrency(raffle.potential_revenue)}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-muted">
+                  <Clock3 className="size-4 text-warning" />
+                  {raffle.reserved_numbers.toLocaleString("pt-BR")} reservados
+                </div>
+                <div className="flex items-center gap-2 text-sm text-muted">
+                  <CircleCheck className="size-4 text-success" />
+                  {raffle.paid_numbers.toLocaleString("pt-BR")} pagos
+                </div>
+              </div>
+
+              <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/[0.07]">
+                <div
+                  className="h-full rounded-full bg-primary"
+                  style={{ width: `${occupancy}%` }}
+                />
+              </div>
+
+              <div className="mt-4 flex justify-end">
+                <RaffleActions raffle={raffle} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="hidden overflow-x-auto lg:block">
         <table className="w-full min-w-[1180px] text-left text-sm">
           <thead className="bg-white/[0.03] text-xs uppercase tracking-[0.14em] text-muted">
             <tr>
